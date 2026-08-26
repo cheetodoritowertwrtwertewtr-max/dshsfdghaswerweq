@@ -1,0 +1,373 @@
+{
+    "version":  1,
+    "generatedAt":  "2026-08-04T19:07:39.8061763Z",
+    "minimumResolution":  "1920x1080",
+    "projects":  [
+                     {
+                         "id":  "we-eagleflag",
+                         "title":  "Eagle Flag",
+                         "type":  "scene",
+                         "mediaType":  "video",
+                         "file":  "./assets/wallpaper-engine-full/we-eagleflag.mp4",
+                         "preview":  "./assets/wallpaper-engine-full/we-eagleflag-poster.webp?v=20260804-hq1",
+                         "width":  1920,
+                         "height":  1080,
+                         "fps":  "30/1",
+                         "duration":  12,
+                         "bytes":  22530089,
+                         "quality":  "rendered-1080p",
+                         "localOnly":  true
+                     },
+                     {
+                         "id":  "we-steam-1153238076",
+                         "title":  "Chroma Drencher",
+                         "type":  "web",
+                         "mediaType":  "web",
+                         "file":  "./assets/wallpaper-engine-web/1153238076/index.html?v=20260805-chrome-v1",
+                         "preview":  "./assets/wallpaper-engine-web/1153238076/preview.gif",
+                         "width":  1920,
+                         "height":  1080,
+                         "responsive":  true,
+                         "bytes":  968557,
+                         "quality":  "original-web",
+                         "localOnly":  true,
+                         "sourceId":  "1153238076"
+                     },
+                     {
+                         "id":  "we-steam-1403160205",
+                         "title":  "• Rainy Day",
+                         "type":  "web",
+                         "mediaType":  "web",
+                        "file":  "./assets/wallpaper-engine-web/1403160205/index.html?v=20260805-chrome-v1",
+                         "preview":  "./assets/wallpaper-engine-web/1403160205/preview.gif",
+                         "width":  1920,
+                         "height":  1080,
+                         "responsive":  true,
+                         "bytes":  24697641,
+                         "quality":  "original-web",
+                         "localOnly":  true,
+                         "sourceId":  "1403160205"
+                     },
+                     {
+                         "id":  "we-steam-1509243786",
+                         "title":  "[CWAV Engine] Custom Wallpaper Audio Visual Engine | Now with Media Integration",
+                         "type":  "web",
+                         "mediaType":  "web",
+                         "file":  "./assets/wallpaper-engine-web/1509243786/index.html?v=20260805-chrome-v1",
+                         "preview":  "./assets/wallpaper-engine-web/1509243786/preview.jpg",
+                         "width":  1920,
+                         "height":  1080,
+                         "responsive":  true,
+                         "bytes":  143782141,
+                         "quality":  "original-web",
+                         "localOnly":  true,
+                         "sourceId":  "1509243786"
+                     },
+                     {
+                         "id":  "we-steam-1748506393",
+                         "title":  "Colorful Fluid Animation [Audio Responsive]",
+                         "type":  "web",
+                         "mediaType":  "web",
+                         "file":  "./assets/wallpaper-engine-web/1748506393/index.html?v=20260805-chrome-v1",
+                         "preview":  "./assets/wallpaper-engine-web/1748506393/preview.gif",
+                         "width":  1920,
+                         "height":  1080,
+                         "responsive":  true,
+                         "bytes":  1502995,
+                         "quality":  "original-web",
+                         "localOnly":  true,
+                         "sourceId":  "1748506393"
+                     },
+                     {
+                         "id":  "we-steam-1789171537",
+                         "title":  "White Tree - Snow",
+                         "type":  "web",
+                         "mediaType":  "web",
+                         "file":  "./assets/wallpaper-engine-web/1789171537/index.html?v=20260805-chrome-v1",
+                         "preview":  "./assets/wallpaper-engine-web/1789171537/preview.jpg",
+                         "width":  3840,
+                         "height":  2160,
+                         "responsive":  true,
+                         "bytes":  4301186,
+                         "quality":  "original-web",
+                         "localOnly":  true,
+                         "sourceId":  "1789171537"
+                     },
+                     {
+                         "id":  "we-steam-2976057265",
+                         "title":  "Abtract White Topographic",
+                         "type":  "video",
+                         "mediaType":  "video",
+                         "file":  "./assets/wallpaper-engine-full/we-steam-2976057265.mp4",
+                         "preview":  "./assets/wallpaper-engine-full/we-steam-2976057265-poster.webp?v=20260804-hq1",
+                         "width":  3840,
+                         "height":  2160,
+                         "fps":  "30/1",
+                         "duration":  10,
+                         "bytes":  33164027,
+                         "quality":  "native-4k",
+                         "localOnly":  true,
+                         "sourceId":  "2976057265"
+                     },
+                     {
+                         "id":  "we-steam-3120899076",
+                         "title":  "[Lightweight] Soothing Minecraft – Serene Snow",
+                         "type":  "video",
+                         "mediaType":  "video",
+                         "file":  "./assets/wallpaper-engine-full/we-steam-3120899076.mp4",
+                         "preview":  "./assets/wallpaper-engine-full/we-steam-3120899076-poster.webp?v=20260804-hq1",
+                         "width":  1920,
+                         "height":  1080,
+                         "fps":  "30/1",
+                         "duration":  180,
+                         "bytes":  63524309,
+                         "quality":  "native-1080p",
+                         "localOnly":  true,
+                         "sourceId":  "3120899076"
+                     },
+                     {
+                         "id":  "we-steam-3137947556",
+                         "title":  "Widgets Project | Customizable | Clock, ToDo Notes, Calendar and more",
+                         "type":  "web",
+                         "mediaType":  "web",
+                         "file":  "./assets/wallpaper-engine-web/3137947556/a.html?v=20260805-chrome-v1",
+                         "preview":  "./assets/wallpaper-engine-web/3137947556/preview.gif",
+                         "width":  1920,
+                         "height":  1080,
+                         "responsive":  true,
+                         "bytes":  7526621,
+                         "quality":  "original-web",
+                         "localOnly":  true,
+                         "sourceId":  "3137947556"
+                     },
+                     {
+                         "id":  "we-steam-3192588052",
+                         "title":  "Drifting Toyota Chaser @Covert1JZ",
+                         "type":  "video",
+                         "mediaType":  "video",
+                         "file":  "./assets/wallpaper-engine-full/we-steam-3192588052.mp4",
+                         "preview":  "./assets/wallpaper-engine-full/we-steam-3192588052-poster.webp?v=20260804-hq1",
+                         "width":  3840,
+                         "height":  2160,
+                         "fps":  "60/1",
+                         "duration":  15,
+                         "bytes":  93007543,
+                         "quality":  "native-4k",
+                         "localOnly":  true,
+                         "sourceId":  "3192588052"
+                     },
+                     {
+                         "id":  "we-steam-3422465318",
+                         "title":  "Dancing rat (Chess type beat)",
+                         "type":  "video",
+                         "mediaType":  "video",
+                         "file":  "./assets/wallpaper-engine-full/we-steam-3422465318.mp4",
+                         "preview":  "./assets/wallpaper-engine-full/we-steam-3422465318-poster.webp?v=20260804-hq1",
+                         "width":  1920,
+                         "height":  1080,
+                         "fps":  "30/1",
+                         "duration":  18.13,
+                         "bytes":  4055717,
+                         "quality":  "native-1080p",
+                         "localOnly":  true,
+                         "sourceId":  "3422465318"
+                     },
+                     {
+                         "id":  "we-steam-3470738721",
+                         "title":  "Widget Wallpaper",
+                         "type":  "web",
+                         "mediaType":  "web",
+                         "file":  "./assets/wallpaper-engine-web/3470738721/index.html?v=20260805-chrome-v1",
+                         "preview":  "./assets/wallpaper-engine-web/3470738721/preview.gif",
+                         "width":  1920,
+                         "height":  1080,
+                         "responsive":  true,
+                         "bytes":  34872077,
+                         "quality":  "original-web",
+                         "localOnly":  true,
+                         "sourceId":  "3470738721"
+                     }
+                 ],
+    "rejected":  [
+                     {
+                         "id":  "we-arsenal",
+                         "title":  "Arsenal",
+                         "reason":  "Rejected because the prior render contained desktop or gameplay footage."
+                     },
+                     {
+                         "id":  "we-audiophile",
+                         "title":  "Audiophile",
+                         "reason":  "Rejected because the prior render contained desktop or gameplay footage."
+                     },
+                     {
+                         "id":  "we-beach",
+                         "title":  "Beach",
+                         "reason":  "Rejected because the prior render contained desktop or gameplay footage."
+                     },
+                     {
+                         "id":  "we-corsair_collection",
+                         "title":  "CORSAIR Collection",
+                         "reason":  "Rejected because the prior render contained desktop or gameplay footage."
+                     },
+                     {
+                         "id":  "we-corsair_o_tron",
+                         "title":  "Corsair-O-Tron",
+                         "reason":  "Rejected because the prior render contained desktop or gameplay footage."
+                     },
+                     {
+                         "id":  "we-deep_space",
+                         "title":  "Deep Space",
+                         "reason":  "Rejected because the prior render contained desktop or gameplay footage."
+                     },
+                     {
+                         "id":  "we-demon_core",
+                         "title":  "Demon Core",
+                         "reason":  "Rejected because the prior render contained desktop or gameplay footage."
+                     },
+                     {
+                         "id":  "we-dino_run",
+                         "title":  "Dino Run",
+                         "reason":  "Rejected because the prior render contained desktop or gameplay footage."
+                     },
+                     {
+                         "id":  "we-dna_fragment",
+                         "title":  "DNA Fragment",
+                         "reason":  "Rejected because the prior render contained desktop or gameplay footage."
+                     },
+                     {
+                         "id":  "we-fantasticcar",
+                         "title":  "Fantastic Car",
+                         "reason":  "Rejected because the prior render contained desktop or gameplay footage."
+                     },
+                     {
+                         "id":  "we-neon_sunset",
+                         "title":  "Neon Sunset",
+                         "reason":  "Rejected because the prior render contained desktop or gameplay footage."
+                     },
+                     {
+                         "id":  "we-razer_bedroom",
+                         "title":  "Razer Bedroom",
+                         "reason":  "A full render is not available in background-only mode."
+                     },
+                     {
+                         "id":  "we-razer_vortex",
+                         "title":  "Razer Vortex",
+                         "reason":  "A full render is not available in background-only mode."
+                     },
+                     {
+                         "id":  "we-retro",
+                         "title":  "Retro",
+                         "reason":  "A full render is not available in background-only mode."
+                     },
+                     {
+                         "id":  "we-ricepod",
+                         "title":  "Ricepod",
+                         "reason":  "A full render is not available in background-only mode."
+                     },
+                     {
+                         "id":  "we-sheep",
+                         "title":  "Sheep",
+                         "reason":  "A full render is not available in background-only mode."
+                     },
+                     {
+                         "id":  "we-shimmering_particles",
+                         "title":  "Shimmering Particles",
+                         "reason":  "A full render is not available in background-only mode."
+                     },
+                     {
+                         "id":  "we-techno",
+                         "title":  "Techno",
+                         "reason":  "A full render is not available in background-only mode."
+                     },
+                     {
+                         "id":  "we-steam-1260883781",
+                         "title":  "1260883781",
+                         "reason":  "A full render is not available in background-only mode."
+                     },
+                     {
+                         "id":  "we-steam-1766852353",
+                         "title":  "1766852353",
+                         "reason":  "Unsupported source type \u0027unknown\u0027."
+                     },
+                     {
+                         "id":  "we-steam-1911719366",
+                         "title":  "1911719366",
+                         "reason":  "A full render is not available in background-only mode."
+                     },
+                     {
+                         "id":  "we-steam-2127129941",
+                         "title":  "2127129941",
+                         "reason":  "A full render is not available in background-only mode."
+                     },
+                     {
+                         "id":  "we-steam-2156479578",
+                         "title":  "2156479578",
+                         "reason":  "A full render is not available in background-only mode."
+                     },
+                     {
+                         "id":  "we-steam-2648912512",
+                         "title":  "2648912512",
+                         "reason":  "A full render is not available in background-only mode."
+                     },
+                     {
+                         "id":  "we-steam-2688067971",
+                         "title":  "2688067971",
+                         "reason":  "A full render is not available in background-only mode."
+                     },
+                     {
+                         "id":  "we-steam-2722810197",
+                         "title":  "2722810197",
+                         "reason":  "Unsupported source type \u0027unknown\u0027."
+                     },
+                     {
+                         "id":  "we-steam-2753960532",
+                         "title":  "2753960532",
+                         "reason":  "Unsupported source type \u0027unknown\u0027."
+                     },
+                     {
+                         "id":  "we-steam-2791515879",
+                         "title":  "2791515879",
+                         "reason":  "A full render is not available in background-only mode."
+                     },
+                     {
+                         "id":  "we-steam-2822381848",
+                         "title":  "2822381848",
+                         "reason":  "Unsupported source type \u0027unknown\u0027."
+                     },
+                     {
+                         "id":  "we-steam-2922403527",
+                         "title":  "2922403527",
+                         "reason":  "A full render is not available in background-only mode."
+                     },
+                     {
+                         "id":  "we-steam-3299228616",
+                         "title":  "3299228616",
+                         "reason":  "A full render is not available in background-only mode."
+                     },
+                     {
+                         "id":  "we-steam-3330705528",
+                         "title":  "3330705528",
+                         "reason":  "Unsupported source type \u0027unknown\u0027."
+                     },
+                     {
+                         "id":  "we-steam-3374036040",
+                         "title":  "3374036040",
+                         "reason":  "A full render is not available in background-only mode."
+                     },
+                     {
+                         "id":  "we-steam-3384226736",
+                         "title":  "3384226736",
+                         "reason":  "Unsupported source type \u0027unknown\u0027."
+                     },
+                     {
+                         "id":  "we-steam-3563242863",
+                         "title":  "3563242863",
+                         "reason":  "A full render is not available in background-only mode."
+                     },
+                     {
+                         "id":  "we-steam-3620629792",
+                         "title":  "3620629792",
+                         "reason":  "A full render is not available in background-only mode."
+                     }
+                 ]
+}

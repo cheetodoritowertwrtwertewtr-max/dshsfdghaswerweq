@@ -1,0 +1,159 @@
+.neo-taskbar-preview {
+  position: fixed;
+  z-index: 5600;
+  width: min(320px, calc(100vw - 20px));
+  padding: 6px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.9);
+  border: 0;
+  border-radius: 8px;
+  box-shadow: none;
+  -webkit-backdrop-filter: blur(18px) saturate(1.05);
+  backdrop-filter: blur(18px) saturate(1.05);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(7px) scale(0.98);
+  transform-origin: bottom center;
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.neo-taskbar-preview[hidden] { display: none; }
+
+.neo-taskbar-preview.is-open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.neo-taskbar-preview-titlebar {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 3px 0 7px;
+}
+
+.neo-taskbar-preview-titlebar > span {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+}
+
+.neo-taskbar-preview-titlebar strong,
+.neo-taskbar-preview-titlebar small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.neo-taskbar-preview-titlebar strong { font-size: 11px; font-weight: 700; }
+.neo-taskbar-preview-titlebar small { color: rgba(255, 255, 255, 0.52); font-size: 9px; }
+
+.neo-taskbar-preview-titlebar button {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  color: rgba(255, 255, 255, 0.7);
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.neo-taskbar-preview-titlebar button:hover,
+.neo-taskbar-preview-titlebar button:focus-visible { color: #fff; background: rgba(255, 255, 255, 0.12); }
+.neo-taskbar-preview-titlebar .icon { width: 14px; height: 14px; }
+
+.neo-taskbar-preview-open {
+  width: 100%;
+  display: block;
+  padding: 0;
+  color: inherit;
+  background: #090909;
+  border: 0;
+  border-radius: 5px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.neo-taskbar-preview-open:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+.neo-taskbar-preview-viewport {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  display: block;
+  overflow: hidden;
+  background: #090909;
+}
+
+.neo-taskbar-preview-clone.neo-window {
+  position: absolute !important;
+  inset: auto !important;
+  display: grid !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  resize: none !important;
+  pointer-events: none !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  transform-origin: top left !important;
+  transition: none !important;
+}
+
+.neo-taskbar-preview-clone,
+.neo-taskbar-preview-clone * {
+  pointer-events: none !important;
+  animation-play-state: paused !important;
+  caret-color: transparent !important;
+  user-select: none !important;
+}
+
+.neo-taskbar-preview-media,
+.neo-taskbar-preview-fallback {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  color: rgba(255, 255, 255, 0.58);
+  background: #0b0b0b;
+  font-size: 22px;
+}
+
+.neo-taskbar-preview-media-icon,
+.neo-taskbar-preview-fallback-icon {
+  width: 58px !important;
+  height: 58px !important;
+  display: grid;
+  place-items: center;
+}
+
+.neo-taskbar-preview-media-icon .app-image-icon,
+.neo-taskbar-preview-fallback-icon .app-image-icon { width: 100%; height: 100%; object-fit: contain; }
+.neo-taskbar-preview-media > span { font-size: 14px; }
+.neo-taskbar-preview-fallback > span { display: grid; gap: 3px; text-align: center; }
+.neo-taskbar-preview-fallback strong { color: #fff; font-size: 14px; }
+.neo-taskbar-preview-fallback small { font-size: 10px; }
+
+.dock-button.is-running:hover::before,
+.dock-button.is-running:focus-visible::before { opacity: 0; }
+
+@media (hover: none), (pointer: coarse), (max-width: 640px) {
+  .neo-taskbar-preview { display: none !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .neo-taskbar-preview { transition: none; }
+}

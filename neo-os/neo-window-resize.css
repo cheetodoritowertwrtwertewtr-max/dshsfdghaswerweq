@@ -1,0 +1,133 @@
+.neo-window {
+  resize: none !important;
+}
+
+@media (min-width: 761px) {
+  .neo-window:not(.is-tab-fullscreen) {
+    max-width: calc(100vw - 14px);
+    max-height: calc(100vh - 106px);
+    max-height: calc(100dvh - 106px);
+  }
+}
+
+.window-resize-handle {
+  position: absolute;
+  z-index: 20;
+  display: block;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  touch-action: none;
+  user-select: none;
+}
+
+.window-resize-handle[data-window-resize="n"],
+.window-resize-handle[data-window-resize="s"] {
+  right: 12px;
+  left: 12px;
+  height: 7px;
+  cursor: ns-resize;
+}
+
+.window-resize-handle[data-window-resize="n"] { top: 0; }
+.window-resize-handle[data-window-resize="s"] { bottom: 0; }
+
+.window-resize-handle[data-window-resize="e"],
+.window-resize-handle[data-window-resize="w"] {
+  top: 12px;
+  bottom: 12px;
+  width: 7px;
+  cursor: ew-resize;
+}
+
+.window-resize-handle[data-window-resize="e"] { right: 0; }
+.window-resize-handle[data-window-resize="w"] { left: 0; }
+
+.window-resize-handle[data-window-resize="ne"],
+.window-resize-handle[data-window-resize="nw"],
+.window-resize-handle[data-window-resize="se"],
+.window-resize-handle[data-window-resize="sw"] {
+  width: 13px;
+  height: 13px;
+}
+
+.window-resize-handle[data-window-resize="ne"] { top: 0; right: 0; cursor: nesw-resize; }
+.window-resize-handle[data-window-resize="nw"] { top: 0; left: 0; cursor: nwse-resize; }
+.window-resize-handle[data-window-resize="se"] { right: 0; bottom: 0; cursor: nwse-resize; }
+.window-resize-handle[data-window-resize="sw"] { bottom: 0; left: 0; cursor: nesw-resize; }
+
+.window-resize-handle[data-window-resize="se"]::after {
+  content: "";
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  width: 5px;
+  height: 5px;
+  border-right: 1px solid rgba(255, 255, 255, 0.48);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.48);
+  opacity: 0.45;
+  transition: opacity 160ms cubic-bezier(.2, .8, .2, 1);
+}
+
+.neo-window.is-active .window-resize-handle[data-window-resize="se"]::after,
+.window-resize-handle[data-window-resize="se"]:hover::after,
+.window-resize-handle[data-window-resize="se"]:focus-visible::after {
+  opacity: 1;
+}
+
+.window-resize-handle[data-window-resize="se"]:focus-visible {
+  outline: 2px solid var(--neo-accent-visible, #ffffff);
+  outline-offset: -2px;
+}
+
+.neo-window.is-maximized .window-resize-handle,
+.neo-window.is-tab-fullscreen .window-resize-handle,
+.neo-window.is-minimized .window-resize-handle {
+  display: none;
+}
+
+html.has-tab-fullscreen .window-layer {
+  z-index: 9000;
+  inset: 0;
+}
+
+html.has-tab-fullscreen .taskbar,
+html.has-tab-fullscreen .widget-layer,
+html.has-tab-fullscreen .rainmeter-clock {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.neo-window.is-tab-fullscreen {
+  position: fixed !important;
+  z-index: 10000 !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-width: none !important;
+  max-height: none !important;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  transform: none;
+}
+
+html.is-resizing-window,
+html.is-resizing-window * {
+  user-select: none !important;
+}
+
+html.is-resizing-window iframe {
+  pointer-events: none !important;
+}
+
+@media (max-width: 720px) {
+  .window-resize-handle { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .window-resize-handle::after { transition: none !important; }
+}

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" fill="none" shape-rendering="geometricPrecision">
+  <circle cx="32" cy="32" r="30" fill="#050505"/>
+  <path
+    d="M32 14C43.05 14 52 20.94 52 29.5S43.05 45 32 45C29.35 45 26.82 44.6 24.5 43.85L16 49L18.7 40.9C14.55 38.1 12 34 12 29.5C12 20.94 20.95 14 32 14Z"
+    stroke="#FFFFFF"
+    stroke-width="3.5"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    vector-effect="non-scaling-stroke"
+  />
+</svg>

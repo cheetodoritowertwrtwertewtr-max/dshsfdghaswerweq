@@ -1,0 +1,341 @@
+.rainmeter-clock[data-rainmeter-ready="true"] {
+  --rainmeter-color: #f7f7f7;
+  --rainmeter-scale: 1.5;
+  --rainmeter-opacity: 1;
+  --rainmeter-text-shadow: 0 2px 14px rgba(0, 0, 0, .58);
+  color: var(--rainmeter-color);
+  opacity: var(--rainmeter-opacity);
+  text-shadow: var(--rainmeter-text-shadow);
+  pointer-events: none;
+  transition: color 180ms cubic-bezier(.2, .8, .2, 1), opacity 180ms cubic-bezier(.2, .8, .2, 1), transform 220ms cubic-bezier(.2, .8, .2, 1), top 220ms cubic-bezier(.2, .8, .2, 1), right 220ms cubic-bezier(.2, .8, .2, 1), bottom 220ms cubic-bezier(.2, .8, .2, 1), left 220ms cubic-bezier(.2, .8, .2, 1);
+}
+
+.rainmeter-clock[data-rainmeter-ready="true"] > * {
+  color: inherit;
+  pointer-events: auto;
+  cursor: context-menu;
+}
+
+.rainmeter-clock[data-rainmeter-ready="true"]:focus-visible {
+  outline: 0;
+}
+
+.rainmeter-clock[data-rainmeter-ready="true"]:focus-visible .rainmeter-weekday {
+  text-shadow: 0 0 0 transparent, 0 0 18px rgba(var(--neo-accent-visible-rgb, 255, 255, 255), .72);
+}
+
+.rainmeter-clock[data-rainmeter-position="top-left"] {
+  top: clamp(26px, 4.5vh, 46px);
+  right: auto;
+  bottom: auto;
+  left: clamp(18px, 4vw, 64px);
+  justify-items: start;
+  text-align: left;
+  transform: scale(var(--rainmeter-scale));
+  transform-origin: top left;
+}
+
+.rainmeter-clock[data-rainmeter-position="top-center"] {
+  top: clamp(26px, 4.5vh, 46px);
+  right: auto;
+  bottom: auto;
+  left: 50%;
+  transform: translateX(-50%) scale(var(--rainmeter-scale));
+  transform-origin: top center;
+}
+
+.rainmeter-clock[data-rainmeter-position="top-right"] {
+  top: clamp(26px, 4.5vh, 46px);
+  right: clamp(18px, 4vw, 64px);
+  bottom: auto;
+  left: auto;
+  justify-items: end;
+  text-align: right;
+  transform: scale(var(--rainmeter-scale));
+  transform-origin: top right;
+}
+
+.rainmeter-clock[data-rainmeter-position="middle-left"] {
+  top: 47%;
+  right: auto;
+  bottom: auto;
+  left: clamp(18px, 4vw, 64px);
+  justify-items: start;
+  text-align: left;
+  transform: translateY(-50%) scale(var(--rainmeter-scale));
+  transform-origin: center left;
+}
+
+.rainmeter-clock[data-rainmeter-position="middle-center"] {
+  top: 47%;
+  right: auto;
+  bottom: auto;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(var(--rainmeter-scale));
+  transform-origin: center;
+}
+
+.rainmeter-clock[data-rainmeter-position="middle-right"] {
+  top: 47%;
+  right: clamp(18px, 4vw, 64px);
+  bottom: auto;
+  left: auto;
+  justify-items: end;
+  text-align: right;
+  transform: translateY(-50%) scale(var(--rainmeter-scale));
+  transform-origin: center right;
+}
+
+.rainmeter-clock[data-rainmeter-position="bottom-left"] {
+  top: auto;
+  right: auto;
+  bottom: calc(76px + env(safe-area-inset-bottom));
+  left: clamp(18px, 4vw, 64px);
+  justify-items: start;
+  text-align: left;
+  transform: scale(var(--rainmeter-scale));
+  transform-origin: bottom left;
+}
+
+.rainmeter-clock[data-rainmeter-position="bottom-center"] {
+  top: auto;
+  right: auto;
+  bottom: calc(76px + env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%) scale(var(--rainmeter-scale));
+  transform-origin: bottom center;
+}
+
+.rainmeter-clock[data-rainmeter-position="bottom-right"] {
+  top: auto;
+  right: clamp(18px, 4vw, 64px);
+  bottom: calc(76px + env(safe-area-inset-bottom));
+  left: auto;
+  justify-items: end;
+  text-align: right;
+  transform: scale(var(--rainmeter-scale));
+  transform-origin: bottom right;
+}
+
+.rainmeter-clock[data-rainmeter-position$="left"] .rainmeter-weekday { justify-content: flex-start; }
+.rainmeter-clock[data-rainmeter-position$="right"] .rainmeter-weekday { justify-content: flex-end; }
+
+.rainmeter-editor {
+  position: fixed;
+  z-index: 9500;
+  width: 292px;
+  max-width: calc(100vw - 16px);
+  max-height: calc(100vh - 16px);
+  overflow: auto;
+  color: #f3f5f8;
+  background: rgba(24, 26, 30, .96);
+  border: 1px solid rgba(255, 255, 255, .14);
+  border-radius: 8px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, .48);
+  -webkit-backdrop-filter: blur(22px) saturate(125%);
+  backdrop-filter: blur(22px) saturate(125%);
+  font: 12px/1.35 Inter, ui-sans-serif, system-ui, sans-serif;
+  animation: rainmeter-editor-in 160ms cubic-bezier(.2, .8, .2, 1) both;
+}
+
+.rainmeter-editor[hidden] { display: none; }
+.rainmeter-editor:focus { outline: 0; }
+
+.rainmeter-editor-header {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) 28px;
+  align-items: center;
+  gap: 9px;
+  min-height: 52px;
+  padding: 8px 9px 8px 11px;
+  border-bottom: 1px solid rgba(255, 255, 255, .09);
+}
+
+.rainmeter-editor-mark {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  color: #0d1117;
+  background: #edf1f5;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.rainmeter-editor-heading strong,
+.rainmeter-editor-heading small { display: block; }
+.rainmeter-editor-heading strong { font-size: 12px; font-weight: 680; }
+.rainmeter-editor-heading small { margin-top: 1px; color: #9299a4; font-size: 9px; }
+
+.rainmeter-editor-close {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  color: #aeb4bd;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  transition: color 160ms cubic-bezier(.2, .8, .2, 1), background-color 160ms cubic-bezier(.2, .8, .2, 1), transform 160ms cubic-bezier(.2, .8, .2, 1);
+}
+.rainmeter-editor-close:hover { color: #fff; background: rgba(255, 255, 255, .09); }
+.rainmeter-editor-close:active { transform: scale(.92); }
+.rainmeter-editor-close svg { width: 15px; height: 15px; }
+
+.rainmeter-editor-section { padding: 13px 14px; }
+.rainmeter-editor-section + .rainmeter-editor-section { border-top: 1px solid rgba(255, 255, 255, .08); }
+
+.rainmeter-control-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.rainmeter-control-heading strong { color: #dfe3e8; font-size: 10px; font-weight: 650; }
+.rainmeter-control-heading output { color: #9ea6b1; font-size: 9px; font-variant-numeric: tabular-nums; }
+
+.rainmeter-colors { display: flex; align-items: center; gap: 8px; }
+.rainmeter-color {
+  position: relative;
+  width: 27px;
+  height: 27px;
+  padding: 0;
+  background: var(--swatch);
+  border: 1px solid rgba(255, 255, 255, .23);
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, .1);
+  transition: transform 160ms cubic-bezier(.2, .8, .2, 1), box-shadow 160ms cubic-bezier(.2, .8, .2, 1);
+}
+.rainmeter-color:hover { transform: translateY(-1px) scale(1.05); }
+.rainmeter-color:active { transform: scale(.94); }
+.rainmeter-color[aria-pressed="true"] { box-shadow: 0 0 0 2px #17191d, 0 0 0 4px var(--neo-accent-visible, #ffffff); }
+
+.rainmeter-custom-color {
+  position: relative;
+  width: 31px;
+  height: 31px;
+  margin-left: auto;
+  overflow: hidden;
+  background: conic-gradient(#f25f5c, #ffd166, #5fd39e, #55a8ff, #9b72e8, #f25f5c);
+  border: 2px solid #30343a;
+  border-radius: 50%;
+}
+.rainmeter-custom-color input { position: absolute; inset: -8px; width: 48px; height: 48px; opacity: 0; cursor: pointer; }
+.rainmeter-custom-color:focus-within { outline: 2px solid var(--neo-accent-visible, #ffffff); outline-offset: 2px; }
+
+.rainmeter-range {
+  width: 100%;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--neo-accent-visible, #ffffff);
+  cursor: pointer;
+}
+.rainmeter-range::-webkit-slider-runnable-track { height: 3px; background: #474c55; border-radius: 3px; }
+.rainmeter-range::-webkit-slider-thumb { width: 15px; height: 15px; margin-top: -6px; background: #eef2f6; border: 0; border-radius: 50%; -webkit-appearance: none; box-shadow: 0 2px 7px rgba(0, 0, 0, .36); }
+.rainmeter-range::-moz-range-track { height: 3px; background: #474c55; border: 0; border-radius: 3px; }
+.rainmeter-range::-moz-range-progress { height: 3px; background: var(--neo-accent-visible, #ffffff); border-radius: 3px; }
+.rainmeter-range::-moz-range-thumb { width: 15px; height: 15px; background: #eef2f6; border: 0; border-radius: 50%; box-shadow: 0 2px 7px rgba(0, 0, 0, .36); }
+
+.rainmeter-position-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+.rainmeter-position {
+  position: relative;
+  height: 32px;
+  padding: 0;
+  background: rgba(255, 255, 255, .035);
+  border: 1px solid rgba(255, 255, 255, .11);
+  border-radius: 5px;
+  transition: background-color 160ms cubic-bezier(.2, .8, .2, 1), border-color 160ms cubic-bezier(.2, .8, .2, 1), transform 160ms cubic-bezier(.2, .8, .2, 1);
+}
+.rainmeter-position:hover { background: rgba(255, 255, 255, .08); border-color: rgba(255, 255, 255, .22); }
+.rainmeter-position:active { transform: scale(.96); }
+.rainmeter-position[aria-pressed="true"] { background: var(--neo-accent-soft, rgba(255, 255, 255, .17)); border-color: var(--neo-accent-visible, #ffffff); }
+.rainmeter-position span { position: absolute; width: 5px; height: 5px; background: #aeb5bf; border-radius: 50%; }
+.rainmeter-position[aria-pressed="true"] span { background: var(--neo-accent-visible, #ffffff); box-shadow: 0 0 8px rgba(var(--neo-accent-visible-rgb, 255, 255, 255), .8); }
+.rainmeter-position[data-rainmeter-position^="top"] span { top: 6px; }
+.rainmeter-position[data-rainmeter-position^="middle"] span { top: 50%; transform: translateY(-50%); }
+.rainmeter-position[data-rainmeter-position^="bottom"] span { bottom: 6px; }
+.rainmeter-position[data-rainmeter-position$="left"] span { left: 9px; }
+.rainmeter-position[data-rainmeter-position$="center"] span { left: 50%; transform: translateX(-50%); }
+.rainmeter-position[data-rainmeter-position="middle-center"] span { transform: translate(-50%, -50%); }
+.rainmeter-position[data-rainmeter-position$="right"] span { right: 9px; }
+
+.rainmeter-switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  cursor: pointer;
+}
+.rainmeter-switch-copy strong,
+.rainmeter-switch-copy small { display: block; }
+.rainmeter-switch-copy strong { color: #dfe3e8; font-size: 10px; font-weight: 650; }
+.rainmeter-switch-copy small { margin-top: 2px; color: #8e96a1; font-size: 9px; }
+.rainmeter-switch { position: relative; flex: 0 0 auto; width: 34px; height: 19px; background: #444951; border-radius: 10px; transition: background-color 170ms cubic-bezier(.2, .8, .2, 1); }
+.rainmeter-switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 15px; height: 15px; background: #f4f5f7; border-radius: 50%; box-shadow: 0 1px 4px rgba(0, 0, 0, .38); transition: transform 170ms cubic-bezier(.2, .8, .2, 1); }
+.rainmeter-switch-row input:checked + .rainmeter-switch { background: var(--neo-accent-visible, #ffffff); }
+.rainmeter-switch-row input:checked + .rainmeter-switch::after { background: var(--neo-accent-contrast, #000000); transform: translateX(15px); }
+.rainmeter-switch-row input:focus-visible + .rainmeter-switch { outline: 2px solid var(--neo-accent-visible, #ffffff); outline-offset: 2px; }
+
+.rainmeter-editor-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid rgba(255, 255, 255, .09);
+}
+.rainmeter-editor-footer button {
+  min-width: 74px;
+  height: 32px;
+  padding: 0 13px;
+  color: #d7dbe1;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, .13);
+  border-radius: 6px;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 650;
+  transition: color 160ms cubic-bezier(.2, .8, .2, 1), background-color 160ms cubic-bezier(.2, .8, .2, 1), border-color 160ms cubic-bezier(.2, .8, .2, 1), transform 160ms cubic-bezier(.2, .8, .2, 1);
+}
+.rainmeter-editor-footer button:hover { color: #fff; background: rgba(255, 255, 255, .08); border-color: rgba(255, 255, 255, .22); }
+.rainmeter-editor-footer button:active { transform: scale(.96); }
+.rainmeter-editor-footer .rainmeter-done { color: var(--neo-accent-contrast, #000000); background: var(--neo-accent-visible, #ffffff); border-color: var(--neo-accent-visible, #ffffff); }
+.rainmeter-editor-footer .rainmeter-done:hover { color: var(--neo-accent-contrast, #000000); background: var(--neo-accent-hover, #e0e0e0); border-color: var(--neo-accent-hover, #e0e0e0); }
+
+.rainmeter-editor button:focus-visible,
+.rainmeter-editor input:focus-visible { outline: 2px solid var(--neo-accent-visible, #ffffff); outline-offset: 2px; }
+
+@keyframes rainmeter-editor-in {
+  from { opacity: 0; transform: translateY(4px) scale(.985); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (max-width: 760px) {
+  .rainmeter-clock[data-rainmeter-ready="true"] { max-width: calc(100vw - 24px); }
+  .rainmeter-clock[data-rainmeter-position$="left"],
+  .rainmeter-clock[data-rainmeter-position$="right"] { right: auto; left: 50%; justify-items: center; text-align: center; transform: translateX(-50%) scale(var(--rainmeter-scale)); transform-origin: center; }
+  .rainmeter-clock[data-rainmeter-position^="middle"] { top: 42%; }
+  .rainmeter-clock[data-rainmeter-position="middle-left"],
+  .rainmeter-clock[data-rainmeter-position="middle-right"] { transform: translate(-50%, -50%) scale(var(--rainmeter-scale)); }
+  .rainmeter-clock[data-rainmeter-position^="bottom"] { top: auto; bottom: calc(72px + env(safe-area-inset-bottom)); }
+  .rainmeter-clock[data-rainmeter-position$="left"] .rainmeter-weekday,
+  .rainmeter-clock[data-rainmeter-position$="right"] .rainmeter-weekday { justify-content: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rainmeter-clock[data-rainmeter-ready="true"],
+  .rainmeter-editor,
+  .rainmeter-editor button,
+  .rainmeter-switch,
+  .rainmeter-switch::after { animation: none; transition: none; }
+}
+
+@supports not ((backdrop-filter: blur(1px))) {
+  .rainmeter-editor { background: #181a1e; }
+}

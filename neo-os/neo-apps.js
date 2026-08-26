@@ -1,0 +1,222 @@
+(function () {
+  "use strict";
+
+  window.NEO_EXTRA_APPS = Object.assign({}, window.NEO_EXTRA_APPS || {}, {
+    stream: {
+      id: "stream",
+      title: "Music",
+      subtitle: "Streaming and local MP3 playback",
+      icon: "stream",
+      template: "browser-template",
+      browserTarget: "https://vcsa.huangqirui.xyz/listen",
+      browserDirect: false,
+      browserChrome: false,
+      browserTheme: "stream-music",
+      width: 1180,
+      height: 760,
+      launcher: true,
+      pinned: true,
+      category: "Media",
+      aliases: ["music", "spotify", "stream", "songs", "albums", "artists", "radio", "playlists", "mp3", "local music", "audio player"]
+    },
+    "geometry-dash": {
+      id: "geometry-dash",
+      title: "Geometry Dash",
+      subtitle: "Rhythm platformer",
+      icon: "geometry-dash",
+      route: "../games/geometry-dash-lite.html",
+      width: 1180,
+      height: 760,
+      launcher: true,
+      pinned: true,
+      category: "Games",
+      aliases: ["geometry dash", "geometry", "dash", "rhythm", "platformer"]
+    },
+    notes: {
+      id: "notes",
+      title: "Notes",
+      subtitle: "Quick local notes",
+      icon: "file",
+      lazy: true,
+      width: 760,
+      height: 600,
+      launcher: true,
+      pinned: false,
+      core: true,
+      category: "Productivity",
+      aliases: ["notes", "notepad", "text", "write"]
+    },
+    calculator: {
+      id: "calculator",
+      title: "Calculator",
+      subtitle: "Fast local calculations",
+      icon: "calculator",
+      lazy: true,
+      width: 390,
+      height: 570,
+      launcher: true,
+      pinned: false,
+      core: true,
+      category: "Utilities",
+      aliases: ["calculator", "math", "numbers"]
+    },
+    paint: {
+      id: "paint",
+      title: "Paint",
+      subtitle: "Sketch and export locally",
+      icon: "brush",
+      lazy: true,
+      width: 980,
+      height: 700,
+      launcher: true,
+      pinned: false,
+      core: true,
+      category: "Creativity",
+      aliases: ["paint", "draw", "canvas", "sketch"]
+    },
+    clock: {
+      id: "clock",
+      title: "Clock",
+      subtitle: "Clock and stopwatch",
+      icon: "monitor",
+      lazy: true,
+      width: 560,
+      height: 520,
+      launcher: true,
+      pinned: false,
+      core: true,
+      category: "Utilities",
+      aliases: ["clock", "time", "stopwatch", "timer"]
+    },
+    photos: {
+      id: "photos",
+      title: "Photos",
+      subtitle: "View pictures from this device",
+      icon: "image",
+      lazy: true,
+      width: 980,
+      height: 700,
+      launcher: true,
+      pinned: false,
+      core: true,
+      category: "Creativity",
+      aliases: ["photos", "images", "gallery", "pictures"]
+    }
+  });
+
+  window.NEORenderActiveApp = function (app, artwork, iconClass) {
+    var icon = document.querySelector("[data-active-app-icon]");
+    var title = document.getElementById("widget-active-title");
+    var action = icon && icon.closest(".widget-action");
+    title.textContent = app.hideName ? "" : app.title;
+    title.hidden = app.hideName === true;
+    document.getElementById("widget-active-copy").textContent = app.subtitle || "Active now";
+    if (action) action.setAttribute("aria-label", "Open " + (app.accessibleName || app.title || "application"));
+    icon.parentElement.dataset.app = app.id;
+    icon.className = "widget-app-icon app-icon-shape " + iconClass;
+    icon.innerHTML = artwork;
+  };
+
+  try {
+    var searchMigrationKey = "neo_os_unpin_search_v1";
+    if (localStorage.getItem(searchMigrationKey) !== "1") {
+      var existingPins = JSON.parse(localStorage.getItem("neo_os_pinned_apps_v1") || "null");
+      if (Array.isArray(existingPins) && existingPins.indexOf("search") !== -1) {
+        localStorage.setItem("neo_os_pinned_apps_v1", JSON.stringify(existingPins.filter(function (id) { return id !== "search"; })));
+      }
+      localStorage.setItem(searchMigrationKey, "1");
+    }
+
+    var streamMigrationKey = "neo_os_stream_music_v1";
+    if (localStorage.getItem(streamMigrationKey) !== "1") {
+      ["neo_os_pinned_apps_v1", "neo_os_installed_apps_v1"].forEach(function (key) {
+        var ids = JSON.parse(localStorage.getItem(key) || "null");
+        if (!Array.isArray(ids)) return;
+        var hadLegacyApp = ids.indexOf("monochrome") !== -1;
+        ids = ids.filter(function (id) { return id !== "monochrome"; });
+        if (hadLegacyApp && ids.indexOf("stream") === -1) ids.push("stream");
+        localStorage.setItem(key, JSON.stringify(ids));
+      });
+      localStorage.setItem(streamMigrationKey, "1");
+    }
+
+    var retiredMusicMigrationKey = "neo_os_remove_youtube_music_v1";
+    if (localStorage.getItem(retiredMusicMigrationKey) !== "1") {
+      ["neo_os_pinned_apps_v1", "neo_os_installed_apps_v1"].forEach(function (key) {
+        var ids = JSON.parse(localStorage.getItem(key) || "null");
+        if (Array.isArray(ids) && ids.indexOf("youtube-music") !== -1) {
+          localStorage.setItem(key, JSON.stringify(ids.filter(function (id) { return id !== "youtube-music"; })));
+        }
+      });
+      localStorage.setItem(retiredMusicMigrationKey, "1");
+    }
+
+    var retiredVideoMigrationKey = "neo_os_remove_youtube_app_v1";
+    if (localStorage.getItem(retiredVideoMigrationKey) !== "1") {
+      ["neo_os_pinned_apps_v1", "neo_os_installed_apps_v1"].forEach(function (key) {
+        var ids = JSON.parse(localStorage.getItem(key) || "null");
+        if (Array.isArray(ids) && ids.indexOf("youtube") !== -1) {
+          localStorage.setItem(key, JSON.stringify(ids.filter(function (id) { return id !== "youtube"; })));
+        }
+      });
+      localStorage.setItem(retiredVideoMigrationKey, "1");
+    }
+
+    var mergedMp3MigrationKey = "neo_os_merge_mp3_into_music_v1";
+    if (localStorage.getItem(mergedMp3MigrationKey) !== "1") {
+      ["neo_os_pinned_apps_v1", "neo_os_installed_apps_v1"].forEach(function (key) {
+        var ids = JSON.parse(localStorage.getItem(key) || "null");
+        if (!Array.isArray(ids)) return;
+        var hadMp3 = ids.indexOf("music") !== -1;
+        ids = ids.filter(function (id) { return id !== "music"; });
+        if (hadMp3 && ids.indexOf("stream") === -1) ids.push("stream");
+        localStorage.setItem(key, JSON.stringify(ids));
+      });
+      localStorage.setItem(mergedMp3MigrationKey, "1");
+    }
+
+    var retiredStoreMigrationKey = "neo_os_remove_app_store_v1";
+    if (localStorage.getItem(retiredStoreMigrationKey) !== "1") {
+      ["neo_os_pinned_apps_v1", "neo_os_installed_apps_v1"].forEach(function (key) {
+        var ids = JSON.parse(localStorage.getItem(key) || "null");
+        if (Array.isArray(ids) && ids.indexOf("store") !== -1) {
+          localStorage.setItem(key, JSON.stringify(ids.filter(function (id) { return id !== "store"; })));
+        }
+      });
+      localStorage.setItem(retiredStoreMigrationKey, "1");
+    }
+
+    var filesMigrationKey = "neo_os_files_app_v1";
+    if (localStorage.getItem(filesMigrationKey) !== "1") {
+      var filesPins = JSON.parse(localStorage.getItem("neo_os_pinned_apps_v1") || "null");
+      if (Array.isArray(filesPins) && filesPins.length && filesPins.indexOf("files") === -1) {
+        var browserIndex = filesPins.indexOf("browser");
+        filesPins.splice(browserIndex === -1 ? 0 : browserIndex + 1, 0, "files");
+        localStorage.setItem("neo_os_pinned_apps_v1", JSON.stringify(filesPins));
+      }
+      localStorage.setItem(filesMigrationKey, "1");
+    }
+
+    var myAppsMigrationKey = "neo_os_my_apps_pin_v1";
+    if (localStorage.getItem(myAppsMigrationKey) !== "1") {
+      var appPins = JSON.parse(localStorage.getItem("neo_os_pinned_apps_v1") || "null");
+      if (Array.isArray(appPins) && appPins.length && appPins.indexOf("apps") === -1) {
+        appPins.unshift("apps");
+        localStorage.setItem("neo_os_pinned_apps_v1", JSON.stringify(appPins));
+      }
+      localStorage.setItem(myAppsMigrationKey, "1");
+    }
+
+    var geometryDashMigrationKey = "neo_os_geometry_dash_app_v1";
+    if (localStorage.getItem(geometryDashMigrationKey) !== "1") {
+      ["neo_os_pinned_apps_v1", "neo_os_installed_apps_v1"].forEach(function (key) {
+        var ids = JSON.parse(localStorage.getItem(key) || "null");
+        if (!Array.isArray(ids) || ids.indexOf("geometry-dash") !== -1) return;
+        var zonesIndex = ids.indexOf("zones");
+        ids.splice(zonesIndex === -1 ? ids.length : zonesIndex + 1, 0, "geometry-dash");
+        localStorage.setItem(key, JSON.stringify(ids));
+      });
+      localStorage.setItem(geometryDashMigrationKey, "1");
+    }
+  } catch (error) {}
+})();
