@@ -255,7 +255,7 @@
       4000,
       "The web app could not inspect its transport.",
     ).catch(() => "");
-    if (candidates.includes(activeTransport) && activeTransportUrl === activeTransport) {
+    if (candidates.includes(activeTransport)) {
       activeTransportUrl = activeTransport;
       return activeTransport;
     }
@@ -678,6 +678,319 @@
     let inspectorState = null;
     let downloadStatusTimer = 0;
     const activeDownloads = new Set();
+    const musicOrigin = "https://vcsa.huangqirui.xyz";
+    const musicAudio = new Audio();
+    let musicOwnerTab = null;
+    let musicList = [];
+    let musicIndex = -1;
+    let musicShuffle = false;
+    let musicWantsPlayback = false;
+    let musicFailureCount = 0;
+    let musicSleepAt = 0;
+    let musicSleepTimer = 0;
+    let musicRadio = true;
+
+    musicAudio.preload = "auto";
+    try {
+      const savedMusicVolume = Number(localStorage.getItem("neo_music_volume"));
+      if (Number.isFinite(savedMusicVolume) && savedMusicVolume >= 0 && savedMusicVolume <= 1) {
+        musicAudio.volume = savedMusicVolume;
+      }
+    } catch (error) {}
+
+    function currentMusicTrack() {
+      return musicList[musicIndex] || null;
+    }
+
+    function musicSourceFor(track) {
+      if (!track) return "";
+      const rawSource = String(track.src || `/api/music/stream?id=${encodeURIComponent(track.id)}`);
+      try {
+        return runtime.routeFor(new URL(rawSource, musicOrigin).href);
+      } catch (error) {
+        return "";
+      }
+    }
+
+    function broadcastMusicState() {
+      const track = currentMusicTrack();
+      const state = {
+        playing: !musicAudio.paused && Boolean(musicAudio.currentSrc),
+        track,
+        idx: musicIndex,
+        list: musicList,
+        listLen: musicList.length,
+        time: musicAudio.currentTime || 0,
+        duration: musicAudio.duration || 0,
+        volume: musicAudio.volume,
+        shuffle: musicShuffle,
+        loop: musicAudio.loop,
+        radio: musicRadio,
+        speed: musicAudio.playbackRate,
+        sleepAt: musicSleepAt,
+      };
+
+      tabs.forEach((tab) => {
+        if (!isMusicDestination(tab.destination)) return;
+        try { tab.frame.contentWindow.postMessage({ sbMusicState: state }, "*"); } catch (error) {}
+      });
+
+      if (musicOwnerTab && track) {
+        musicOwnerTab.mediaState = {
+          active: true,
+          playing: state.playing,
+          title: String(track.title || "Music").slice(0, 160),
+          subtitle: String(track.artist || "").slice(0, 180),
+          cover: String(track.artwork || "").slice(0, 4096),
+          kind: "audio",
+          position: state.time,
+          duration: state.duration,
+          volume: state.volume,
+          muted: musicAudio.muted,
+          volumeControl: true,
+        };
+        musicOwnerTab.mediaUpdatedAt = Date.now();
+      } else if (musicOwnerTab) {
+        musicOwnerTab.mediaState = null;
+      }
+      emitBrowserMediaState();
+      emitBrowserMediaPriority();
+
+      if ("mediaSession" in navigator) {
+        try {
+          if (!track) {
+            navigator.mediaSession.metadata = null;
+            navigator.mediaSession.playbackState = "none";
+          } else {
+            navigator.mediaSession.metadata = new MediaMetadata({
+              title: track.title || "Music",
+              artist: track.artist || "",
+              album: "NEO Music",
+              artwork: track.artwork ? [{ src: track.artwork }] : [],
+            });
+            navigator.mediaSession.playbackState = state.playing ? "playing" : "paused";
+          }
+        } catch (error) {}
+      }
+    }
+
+    function loadMusicTrack(index, autoplay = true) {
+      const track = musicList[index];
+      const source = musicSourceFor(track);
+      if (!track || !source) return;
+      musicIndex = index;
+      musicWantsPlayback = autoplay;
+      musicAudio.pause();
+      musicAudio.src = source;
+      musicAudio.currentTime = 0;
+      musicAudio.load();
+      if (autoplay) musicAudio.play().catch(() => broadcastMusicState());
+      broadcastMusicState();
+    }
+
+    function nextMusicTrack() {
+      if (!musicList.length) return;
+      if (musicShuffle && musicList.length > 1) {
+        let nextIndex = musicIndex;
+        while (nextIndex === musicIndex) nextIndex = Math.floor(Math.random() * musicList.length);
+        loadMusicTrack(nextIndex, true);
+        return;
+      }
+      loadMusicTrack((musicIndex + 1) % musicList.length, true);
+    }
+
+    function previousMusicTrack() {
+      if (!musicList.length) return;
+      if (musicAudio.currentTime > 3) {
+        musicAudio.currentTime = 0;
+        broadcastMusicState();
+        return;
+      }
+      loadMusicTrack((musicIndex - 1 + musicList.length) % musicList.length, true);
+    }
+
+    function updateMusicQueue(command, insertNext) {
+      const tracks = Array.isArray(command.tracks)
+        ? command.tracks.filter(Boolean)
+        : command.track ? [command.track] : [];
+      if (!tracks.length) return;
+      const wasEmpty = !musicList.length;
+      if (insertNext && musicIndex >= 0) musicList.splice(musicIndex + 1, 0, ...tracks);
+      else musicList.push(...tracks);
+      if (wasEmpty) loadMusicTrack(0, true);
+      else broadcastMusicState();
+    }
+
+    function handleMusicCommand(tab, command) {
+      if (!command || typeof command !== "object") return;
+      musicOwnerTab = tab;
+      switch (command.type) {
+        case "play":
+          musicFailureCount = 0;
+          musicList = Array.isArray(command.list) && command.list.length
+            ? command.list.filter(Boolean)
+            : command.track ? [command.track] : musicList;
+          loadMusicTrack(Math.max(0, Math.min(musicList.length - 1, Number(command.idx) || 0)), true);
+          break;
+        case "toggle":
+          if (musicAudio.paused) {
+            musicWantsPlayback = true;
+            musicFailureCount = 0;
+            if (currentMusicTrack()) musicAudio.play().catch(() => broadcastMusicState());
+          } else {
+            musicWantsPlayback = false;
+            musicAudio.pause();
+          }
+          break;
+        case "next":
+          nextMusicTrack();
+          break;
+        case "prev":
+          previousMusicTrack();
+          break;
+        case "seek":
+          if (musicAudio.duration) musicAudio.currentTime = Math.max(0, Math.min(musicAudio.duration, (Number(command.pct) || 0) / 100 * musicAudio.duration));
+          broadcastMusicState();
+          break;
+        case "seekTo":
+          if (musicAudio.duration) musicAudio.currentTime = Math.max(0, Math.min(musicAudio.duration, Number(command.sec) || 0));
+          broadcastMusicState();
+          break;
+        case "speed": {
+          const speed = Math.max(0.5, Math.min(2, Number(command.v) || 1));
+          musicAudio.defaultPlaybackRate = speed;
+          musicAudio.playbackRate = speed;
+          broadcastMusicState();
+          break;
+        }
+        case "sleep": {
+          window.clearTimeout(musicSleepTimer);
+          const minutes = Math.max(0, Number(command.minutes) || 0);
+          musicSleepAt = minutes ? Date.now() + minutes * 60000 : 0;
+          if (minutes) {
+            musicSleepTimer = window.setTimeout(() => {
+              musicSleepAt = 0;
+              musicWantsPlayback = false;
+              musicAudio.pause();
+              broadcastMusicState();
+            }, minutes * 60000);
+          }
+          broadcastMusicState();
+          break;
+        }
+        case "volume":
+          musicAudio.volume = Math.max(0, Math.min(1, Number(command.v) || 0));
+          try { localStorage.setItem("neo_music_volume", String(musicAudio.volume)); } catch (error) {}
+          broadcastMusicState();
+          break;
+        case "shuffle":
+          musicShuffle = command.on === true;
+          broadcastMusicState();
+          break;
+        case "loop":
+          musicAudio.loop = command.on === true;
+          broadcastMusicState();
+          break;
+        case "stop":
+          musicWantsPlayback = false;
+          musicAudio.pause();
+          musicAudio.removeAttribute("src");
+          musicAudio.load();
+          musicList = [];
+          musicIndex = -1;
+          broadcastMusicState();
+          break;
+        case "queueAdd":
+          updateMusicQueue(command, false);
+          break;
+        case "queueNext":
+          updateMusicQueue(command, true);
+          break;
+        case "queueRemove": {
+          const index = Number(command.idx);
+          if (!Number.isInteger(index) || index < 0 || index >= musicList.length) break;
+          const wasCurrent = index === musicIndex;
+          const wasPlaying = !musicAudio.paused;
+          musicList.splice(index, 1);
+          if (!musicList.length) {
+            handleMusicCommand(tab, { type: "stop" });
+          } else if (index < musicIndex) {
+            musicIndex -= 1;
+            broadcastMusicState();
+          } else if (wasCurrent) {
+            if (musicIndex >= musicList.length) musicIndex = 0;
+            loadMusicTrack(musicIndex, wasPlaying);
+          } else {
+            broadcastMusicState();
+          }
+          break;
+        }
+        case "queueMove": {
+          const from = Number(command.from);
+          const to = Number(command.to);
+          if (![from, to].every(Number.isInteger) || from < 0 || to < 0 || from >= musicList.length || to >= musicList.length || from === to) break;
+          const [track] = musicList.splice(from, 1);
+          musicList.splice(to, 0, track);
+          if (musicIndex === from) musicIndex = to;
+          else {
+            if (from < musicIndex) musicIndex -= 1;
+            if (to <= musicIndex) musicIndex += 1;
+          }
+          broadcastMusicState();
+          break;
+        }
+        case "queueClear": {
+          const current = currentMusicTrack();
+          musicList = current ? [current] : [];
+          musicIndex = current ? 0 : -1;
+          broadcastMusicState();
+          break;
+        }
+        case "radio":
+          musicRadio = command.on === true;
+          broadcastMusicState();
+          break;
+        case "getstate":
+          broadcastMusicState();
+          break;
+        default:
+          break;
+      }
+    }
+
+    ["play", "pause", "playing", "loadedmetadata", "durationchange", "timeupdate", "volumechange", "ratechange"].forEach((eventName) => {
+      musicAudio.addEventListener(eventName, broadcastMusicState);
+    });
+    musicAudio.addEventListener("ended", () => {
+      if (!musicAudio.loop) nextMusicTrack();
+    });
+    musicAudio.addEventListener("error", () => {
+      if (!musicWantsPlayback) return;
+      musicFailureCount += 1;
+      if (musicFailureCount < 2 && currentMusicTrack()) {
+        window.setTimeout(() => loadMusicTrack(musicIndex, true), 500);
+      } else {
+        musicWantsPlayback = false;
+        broadcastMusicState();
+      }
+    });
+
+    if ("mediaSession" in navigator) {
+      const actions = {
+        play: () => currentMusicTrack() && musicAudio.play().catch(() => {}),
+        pause: () => musicAudio.pause(),
+        stop: () => handleMusicCommand(musicOwnerTab, { type: "stop" }),
+        nexttrack: nextMusicTrack,
+        previoustrack: previousMusicTrack,
+        seekto: (detail) => {
+          if (detail?.seekTime == null || !musicAudio.duration) return;
+          musicAudio.currentTime = Math.max(0, Math.min(musicAudio.duration, detail.seekTime));
+        },
+      };
+      Object.entries(actions).forEach(([action, handler]) => {
+        try { navigator.mediaSession.setActionHandler(action, handler); } catch (error) {}
+      });
+    }
 
     function showDownloadStatus(copy, state, persistent = false) {
       window.clearTimeout(downloadStatusTimer);
@@ -1354,10 +1667,14 @@
     });
 
     const handleFrameMessage = (event) => {
-      const messageType = event.data?.type;
-      if (!["neo-browser:navigation", "neo-browser:navigate-request", "neo-browser:download-start", "neo-browser:download-cancel", "neo-browser:download-request", "neo-browser:download-error", "neo-browser:context-menu", "neo-browser:context-dismiss", "neo-browser:inspect-selected", "neo-browser:media-state", "neo-browser:media-levels"].includes(messageType)) return;
       const tab = tabs.find((candidate) => event.source === candidate.frame.contentWindow);
       if (!tab) return;
+      if (event.data?.sbMusic && isMusicDestination(tab.destination)) {
+        handleMusicCommand(tab, event.data.sbMusic);
+        return;
+      }
+      const messageType = event.data?.type;
+      if (!["neo-browser:navigation", "neo-browser:navigate-request", "neo-browser:download-start", "neo-browser:download-cancel", "neo-browser:download-request", "neo-browser:download-error", "neo-browser:context-menu", "neo-browser:context-dismiss", "neo-browser:inspect-selected", "neo-browser:media-state", "neo-browser:media-levels"].includes(messageType)) return;
       if (messageType === "neo-browser:download-start") {
         showDownloadStatus(`Saving ${safeDownloadName(event.data.name || "Download")} to Drive...`, "active", true);
         return;
@@ -1480,6 +1797,12 @@
       const mediaTab = mediaTabForDisplay();
       if (!mediaTab) return;
       const volume = Math.max(0, Math.min(1, Number(event.detail?.volume) || 0));
+      if (mediaTab === musicOwnerTab && isMusicDestination(mediaTab.destination)) {
+        musicAudio.volume = volume;
+        try { localStorage.setItem("neo_music_volume", String(volume)); } catch (error) {}
+        broadcastMusicState();
+        return;
+      }
       postToTab(mediaTab, { type: "neo-browser:set-volume", volume });
     };
 
@@ -1495,6 +1818,11 @@
       window.removeEventListener("pointerdown", dismissContextMenu, true);
       window.removeEventListener("neo-media-volume-request", handleMediaVolumeRequest);
       window.clearTimeout(downloadStatusTimer);
+      window.clearTimeout(musicSleepTimer);
+      musicWantsPlayback = false;
+      musicAudio.pause();
+      musicAudio.removeAttribute("src");
+      musicAudio.load();
       tabs.forEach((tab) => {
         try { tab.frame.contentWindow.onbeforeunload = null; } catch (error) {}
         tab.frame.remove();

@@ -1269,7 +1269,7 @@
       var existing = document.getElementById("neo-browse-runtime-script");
       var script = existing || document.createElement("script");
       script.id = "neo-browse-runtime-script";
-      script.src = "./neo-browser-runtime.js?v=20260825-favorites-spelling-v20";
+      script.src = "./neo-browser-runtime.js?v=20260827-music-playback-bridge-v2";
       script.async = true;
       script.onload = function () {
         if (!window.NEO_BROWSER_ENGINE) {
