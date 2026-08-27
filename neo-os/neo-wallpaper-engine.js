@@ -477,7 +477,11 @@
       media.removeAttribute("src");
       media.load();
     }
-    if (media.tagName === "IFRAME") media.src = "about:blank";
+    if (media.tagName === "IFRAME") {
+      if (window.NEOFrameLoader) window.NEOFrameLoader.cancel(media);
+      media.removeAttribute("srcdoc");
+      media.src = "about:blank";
+    }
     media.remove();
   }
 
@@ -991,13 +995,20 @@
     media.className = "wallpaper-media-asset";
     enforceFullBleed(media, runtimeSettings.wallpaperFit || "cover");
     media.addEventListener("load", function () { syncPlayback(); emit("ready"); });
-    media.src = urlFor(record, false);
     layer.appendChild(media);
     activeMedia = media;
     startWebHealthWatch(media, record, sequence);
     syncPlayback();
     emit("mount");
-    return Promise.resolve();
+    var route = urlFor(record, false);
+    var frameLoad = window.NEOFrameLoader
+      ? window.NEOFrameLoader.load(media, route)
+      : Promise.resolve().then(function () { media.src = route; });
+    return frameLoad.catch(function (error) {
+      if (sequence !== applySequence || activeMedia !== media || (error && error.name === "AbortError")) throw error;
+      startPreviewCanvas(record, sequence);
+      emit("fallback");
+    });
   }
 
   function startSignalCanvas(sequence) {

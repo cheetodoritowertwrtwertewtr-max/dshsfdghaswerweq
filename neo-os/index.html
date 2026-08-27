@@ -37,7 +37,7 @@
         if (!("serviceWorker" in navigator)) return;
         var expectedEngine = "neo-browse-v66";
         var recoveryKey = "neo_proxy_scope_recovered_" + expectedEngine;
-        var expectedScope = new URL("./browse-v66/", window.location.href).href;
+        var expectedScope = new URL("./browse-v66/", document.baseURI).href;
         window.__neoProxyRecovery = navigator.serviceWorker.getRegistrations().then(function (registrations) {
           var stale = registrations.filter(function (registration) {
             var workers = [registration.active, registration.waiting, registration.installing].filter(Boolean);
@@ -71,7 +71,7 @@
     <link rel="preconnect" href="https://vcsa.huangqirui.xyz" />
     <link rel="dns-prefetch" href="//vcsa.huangqirui.xyz" />
     <link rel="prefetch" href="./NEO-BROWSER/index.html" />
-    <link rel="stylesheet" href="./neo-os.css?v=20260825-white-accents-v1-minimize-hit-test-v1-geometry-dash-v1-volume-flyout-v2" />
+    <link rel="stylesheet" href="./neo-os.css?v=20260826-compiler-window-layer-v2" />
     <link rel="stylesheet" href="./neo-taskbar-menu.css?v=20260825-alignment-v1" />
     <link rel="stylesheet" href="./neo-taskbar-preview.css?v=20260825-window-hover-v2" />
     <link rel="stylesheet" href="./neo-apps.css?v=20260825-spotify-sharp-v1-icon-completion-v1-music-direct-v1" />
@@ -1138,9 +1138,10 @@
       </div>
     </template>
 
-    <script src="./neo-apps.js?v=20260826-music-stable-session-v1" defer></script>
+    <script src="./neo-frame-loader.js?v=20260826-compiler-html-v1" defer></script>
+    <script src="./neo-apps.js?v=20260826-music-direct-compiler-v2" defer></script>
     <script src="./neo-music-runtime.js?v=20260825-direct-session-v1" defer></script>
-    <script src="./neo-wallpaper-engine.js?v=20260824-full-downloads-v2" defer></script>
+    <script src="./neo-wallpaper-engine.js?v=20260826-compiler-html-v1" defer></script>
     <script src="./neo-wallpaper-quality.js?v=20260804-quality-v7" defer></script>
     <script src="./neo-taskbar-preview.js?v=20260825-window-hover-v3" defer></script>
     <script src="./neo-os.js?v=20260825-ready-discover-v2-minimize-hit-test-v1-neo-browser-build-v1-click-routing-v2-audio-player-labels-v1-large-window-default-v2-geometry-dash-v1-music-direct-v1-taskbar-window-hover-v1-browser-no-native-prompts-v1" defer></script>

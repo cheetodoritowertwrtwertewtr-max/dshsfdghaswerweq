@@ -2560,12 +2560,20 @@
     function beginLoad() {
       loader.classList.remove("is-complete");
       fallback.classList.remove("is-visible");
-      frame.src = app.route;
       window.clearTimeout(timeout);
       timeout = window.setTimeout(function () {
         loader.classList.add("is-complete");
         fallback.classList.add("is-visible");
       }, 9000);
+      var frameLoad = window.NEOFrameLoader
+        ? window.NEOFrameLoader.load(frame, app.route)
+        : Promise.resolve().then(function () { frame.src = app.route; });
+      frameLoad.catch(function (error) {
+        if (error && error.name === "AbortError") return;
+        window.clearTimeout(timeout);
+        loader.classList.add("is-complete");
+        fallback.classList.add("is-visible");
+      });
     }
     frame.addEventListener("load", function () {
       window.clearTimeout(timeout);
@@ -2676,6 +2684,9 @@
     if (musicRuntime.cacheWindow(win, id, openWindows, app, forceDestroy, renderDock, activateTopWindow)) return;
     if (id === "stream") renderNowPlaying({ source: "browse-media:stream", active: false });
     musicRuntime.dropWindow(id);
+    if (window.NEOFrameLoader) {
+      win.querySelectorAll("iframe").forEach(function (frame) { window.NEOFrameLoader.cancel(frame); });
+    }
     if (win._neoResizeObserver) win._neoResizeObserver.disconnect();
     if (typeof win._neoBrowserCleanup === "function") win._neoBrowserCleanup();
     if (typeof win._neoMessagesCleanup === "function") win._neoMessagesCleanup();
@@ -2909,7 +2920,7 @@
   function loadCatalog() {
     if (catalog) return Promise.resolve(catalog);
     if (catalogPromise) return catalogPromise;
-    catalogPromise = fetch("/games/index.json", { credentials: "same-origin", cache: "force-cache" })
+    catalogPromise = fetch(projectAssetUrl("games/index.json"), { credentials: "omit", cache: "force-cache" })
       .then(function (response) {
         if (!response.ok) throw new Error("Catalog request failed");
         return response.json();
@@ -2935,7 +2946,7 @@
   function loadCoverManifest() {
     if (coverManifestLoaded) return Promise.resolve(coverManifest);
     if (coverManifestPromise) return coverManifestPromise;
-    coverManifestPromise = fetch("/games/covers.json?v=20260802-neo-v2", { credentials: "same-origin", cache: "force-cache" })
+    coverManifestPromise = fetch(projectAssetUrl("games/covers.json?v=20260802-neo-v2"), { credentials: "omit", cache: "force-cache" })
       .then(function (response) {
         if (!response.ok) throw new Error("Cover manifest request failed");
         return response.json();
@@ -3174,16 +3185,18 @@
     var safe = encodeURIComponent(slug);
     var candidates = [];
     var mapped = String(coverManifest[slug] || "").trim();
-    if (/^\/games\/captured-covers\//i.test(mapped) || /^https:\/\//i.test(mapped)) candidates.push(mapped);
+    if (/^\/games\/captured-covers\//i.test(mapped)) candidates.push(projectAssetUrl(mapped));
+    else if (/^https:\/\//i.test(mapped)) candidates.push(mapped);
     [
-      "/games/captured-covers/" + safe + "-cover.webp",
-      "/games/captured-covers/" + safe + "-illustrated.webp",
-      "/games/captured-covers/" + safe + "-capture.webp",
-      "/games/captured-covers/" + safe + ".webp",
-      "/games/captured-covers/" + safe + ".jpg",
-      "/games/captured-covers/" + safe + ".jpeg",
-      "/games/captured-covers/" + safe + ".png"
+      "games/captured-covers/" + safe + "-cover.webp",
+      "games/captured-covers/" + safe + "-illustrated.webp",
+      "games/captured-covers/" + safe + "-capture.webp",
+      "games/captured-covers/" + safe + ".webp",
+      "games/captured-covers/" + safe + ".jpg",
+      "games/captured-covers/" + safe + ".jpeg",
+      "games/captured-covers/" + safe + ".png"
     ].forEach(function (candidate) {
+      candidate = projectAssetUrl(candidate);
       if (candidates.indexOf(candidate) === -1) candidates.push(candidate);
     });
     return candidates;
@@ -3230,7 +3243,12 @@
   function localGameRoute(entry) {
     var file = String(entry && entry.file || "").replace(/\\/g, "/");
     if (!/^games\/[A-Za-z0-9._()\[\] -]+\.html$/.test(file)) return "";
-    return "/" + file.split("/").map(encodeURIComponent).join("/");
+    return projectAssetUrl(file.split("/").map(encodeURIComponent).join("/"));
+  }
+
+  function projectAssetUrl(path) {
+    var clean = String(path || "").replace(/^\/+/, "");
+    return new URL("../" + clean, document.baseURI).href;
   }
 
   function openWallpaperDatabase() {
@@ -4550,7 +4568,14 @@
       }
       var direct = event.target.closest("[data-frame-direct]");
       if (direct) {
-        window.open(direct.getAttribute("data-frame-direct"), "_blank", "noopener,noreferrer");
+        var route = direct.getAttribute("data-frame-direct");
+        if (window.NEOFrameLoader) {
+          window.NEOFrameLoader.open(route).catch(function () {
+            showToast("Could not open app", "Please try again.", "apps");
+          });
+        } else {
+          window.open(route, "_blank", "noopener,noreferrer");
+        }
         return;
       }
     });

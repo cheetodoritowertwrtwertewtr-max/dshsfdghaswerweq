@@ -740,7 +740,7 @@ html[data-widget-lock="false"] .neo-widget:active {
 
 .window-layer {
   position: absolute;
-  z-index: 50;
+  z-index: 80;
   inset: var(--topbar-height) 0 0;
   pointer-events: none;
 }

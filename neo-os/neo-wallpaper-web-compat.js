@@ -3,6 +3,24 @@
 
   if (window.__neoWallpaperCompat) return;
 
+  if (document.querySelector('meta[name="neo-runner"]')) {
+    var NativeImage = window.Image;
+    function RunnerImage(width, height) {
+      var image = new NativeImage(width, height);
+      image.crossOrigin = "anonymous";
+      return image;
+    }
+    RunnerImage.prototype = NativeImage.prototype;
+    try { Object.setPrototypeOf(RunnerImage, NativeImage); } catch (_error) {}
+    window.Image = RunnerImage;
+
+    document.addEventListener("DOMContentLoaded", function () {
+      document.querySelectorAll("img:not([crossorigin])").forEach(function (image) {
+        image.crossOrigin = "anonymous";
+      });
+    }, { once: true });
+  }
+
   var nativeRequestAnimationFrame = window.requestAnimationFrame.bind(window);
   var nativeCancelAnimationFrame = window.cancelAnimationFrame.bind(window);
   var nativeSetInterval = window.setInterval.bind(window);
