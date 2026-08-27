@@ -19,6 +19,10 @@ Bundled libcurl.js dependencies
 -------------------------------
 mbed TLS is licensed under Apache License 2.0. cJSON, Brotli, and nghttp2 include permissive open-source licenses. Their copyright and license terms remain applicable.
 
+Jet/Scramjet and libcurl transport
+----------------------------------
+The compatibility transport includes Jet/Scramjet and the libcurl transport under the GNU Affero General Public License, version 3. Complete license texts are included in the jet and curl directories and must remain with redistributed copies.
+
 Font Awesome Free 6.7.2
 ------------------------
 Icons are licensed under CC BY 4.0; fonts under SIL OFL 1.1; code under the MIT License.
