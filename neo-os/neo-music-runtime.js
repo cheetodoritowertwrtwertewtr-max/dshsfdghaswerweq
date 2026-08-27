@@ -3,6 +3,270 @@
 
   var cachedWindows = new Map();
 
+  function createDirectPlaybackBridge(frame, target) {
+    var sourceId = "stream-music";
+    var audio = new Audio();
+    var queue = [];
+    var index = -1;
+    var shuffle = false;
+    var wantsPlayback = false;
+    var failures = 0;
+    var sleepAt = 0;
+    var sleepTimer = 0;
+
+    audio.preload = "auto";
+    try {
+      var savedVolume = Number(localStorage.getItem("neo_stream_music_volume"));
+      if (Number.isFinite(savedVolume) && savedVolume >= 0 && savedVolume <= 1) audio.volume = savedVolume;
+    } catch (error) {}
+
+    function currentTrack() {
+      return queue[index] || null;
+    }
+
+    function sourceFor(track) {
+      if (!track) return "";
+      var raw = String(track.src || "/api/music/stream?id=" + encodeURIComponent(track.id));
+      try {
+        var source = new URL(raw, target.href);
+        return source.origin === target.origin && source.protocol === "https:" ? source.href : "";
+      } catch (error) {
+        return "";
+      }
+    }
+
+    function state() {
+      var track = currentTrack();
+      return {
+        playing: !audio.paused && Boolean(audio.currentSrc),
+        track: track,
+        idx: index,
+        list: queue,
+        listLen: queue.length,
+        time: audio.currentTime || 0,
+        duration: audio.duration || 0,
+        volume: audio.volume,
+        shuffle: shuffle,
+        loop: audio.loop,
+        radio: true,
+        speed: audio.playbackRate,
+        sleepAt: sleepAt
+      };
+    }
+
+    function broadcast() {
+      var playback = state();
+      var track = playback.track;
+      try { frame.contentWindow.postMessage({ sbMusicState: playback }, "*"); } catch (error) {}
+      window.dispatchEvent(new CustomEvent("neo-media-state", {
+        detail: track ? {
+          source: sourceId,
+          active: true,
+          playing: playback.playing,
+          title: String(track.title || "Music").slice(0, 160),
+          subtitle: String(track.artist || "").slice(0, 180),
+          cover: String(track.artwork || "").slice(0, 4096),
+          kind: "audio",
+          position: playback.time,
+          duration: playback.duration,
+          volume: playback.volume,
+          muted: audio.muted,
+          volumeControl: true,
+          transport: false,
+          pauseWallpaper: false
+        } : { source: sourceId, active: false }
+      }));
+      if ("mediaSession" in navigator) {
+        try {
+          if (!track) {
+            navigator.mediaSession.metadata = null;
+            navigator.mediaSession.playbackState = "none";
+          } else {
+            navigator.mediaSession.metadata = new MediaMetadata({
+              title: track.title || "Music",
+              artist: track.artist || "",
+              album: "NEO Music",
+              artwork: track.artwork ? [{ src: track.artwork }] : []
+            });
+            navigator.mediaSession.playbackState = playback.playing ? "playing" : "paused";
+          }
+        } catch (error) {}
+      }
+    }
+
+    function loadTrack(nextIndex, autoplay) {
+      var track = queue[nextIndex];
+      var source = sourceFor(track);
+      if (!track || !source) return;
+      index = nextIndex;
+      wantsPlayback = autoplay !== false;
+      audio.pause();
+      audio.src = source;
+      audio.currentTime = 0;
+      audio.load();
+      if (wantsPlayback) audio.play().catch(broadcast);
+      broadcast();
+    }
+
+    function next() {
+      if (!queue.length) return;
+      var nextIndex = shuffle && queue.length > 1 ? Math.floor(Math.random() * queue.length) : (index + 1) % queue.length;
+      loadTrack(nextIndex, true);
+    }
+
+    function previous() {
+      if (!queue.length) return;
+      if (audio.currentTime > 3) {
+        audio.currentTime = 0;
+        broadcast();
+        return;
+      }
+      loadTrack((index - 1 + queue.length) % queue.length, true);
+    }
+
+    function addToQueue(command, insertNext) {
+      var tracks = Array.isArray(command.tracks) ? command.tracks.filter(Boolean) : command.track ? [command.track] : [];
+      if (!tracks.length) return;
+      var wasEmpty = !queue.length;
+      if (insertNext && index >= 0) queue.splice.apply(queue, [index + 1, 0].concat(tracks));
+      else queue.push.apply(queue, tracks);
+      if (wasEmpty) loadTrack(0, true);
+      else broadcast();
+    }
+
+    function handle(command) {
+      if (!command || typeof command !== "object") return;
+      switch (command.type) {
+        case "play":
+          failures = 0;
+          queue = Array.isArray(command.list) && command.list.length ? command.list.filter(Boolean) : command.track ? [command.track] : queue;
+          loadTrack(Math.max(0, Math.min(queue.length - 1, Number(command.idx) || 0)), true);
+          break;
+        case "toggle":
+          if (audio.paused) {
+            wantsPlayback = true;
+            failures = 0;
+            if (currentTrack()) audio.play().catch(broadcast);
+          } else {
+            wantsPlayback = false;
+            audio.pause();
+          }
+          break;
+        case "next": next(); break;
+        case "prev": previous(); break;
+        case "seek":
+          if (audio.duration) audio.currentTime = Math.max(0, Math.min(audio.duration, (Number(command.pct) || 0) / 100 * audio.duration));
+          broadcast();
+          break;
+        case "seekTo":
+          if (audio.duration) audio.currentTime = Math.max(0, Math.min(audio.duration, Number(command.sec) || 0));
+          broadcast();
+          break;
+        case "speed":
+          audio.playbackRate = Math.max(0.5, Math.min(2, Number(command.v) || 1));
+          audio.defaultPlaybackRate = audio.playbackRate;
+          broadcast();
+          break;
+        case "sleep":
+          window.clearTimeout(sleepTimer);
+          var minutes = Math.max(0, Number(command.minutes) || 0);
+          sleepAt = minutes ? Date.now() + minutes * 60000 : 0;
+          if (minutes) sleepTimer = window.setTimeout(function () {
+            sleepAt = 0;
+            wantsPlayback = false;
+            audio.pause();
+            broadcast();
+          }, minutes * 60000);
+          broadcast();
+          break;
+        case "volume":
+          audio.volume = Math.max(0, Math.min(1, Number(command.v) || 0));
+          try { localStorage.setItem("neo_stream_music_volume", String(audio.volume)); } catch (error) {}
+          broadcast();
+          break;
+        case "shuffle": shuffle = command.on === true; broadcast(); break;
+        case "loop": audio.loop = command.on === true; broadcast(); break;
+        case "queueAdd": addToQueue(command, false); break;
+        case "queueNext": addToQueue(command, true); break;
+        case "queueRemove": {
+          var removeIndex = Number(command.idx);
+          if (!Number.isInteger(removeIndex) || removeIndex < 0 || removeIndex >= queue.length) break;
+          var wasCurrent = removeIndex === index;
+          var wasPlaying = !audio.paused;
+          queue.splice(removeIndex, 1);
+          if (!queue.length) {
+            wantsPlayback = false;
+            audio.pause();
+            audio.removeAttribute("src");
+            audio.load();
+            index = -1;
+            broadcast();
+          } else if (removeIndex < index) {
+            index -= 1;
+            broadcast();
+          } else if (wasCurrent) {
+            if (index >= queue.length) index = 0;
+            loadTrack(index, wasPlaying);
+          } else broadcast();
+          break;
+        }
+        case "queueMove": {
+          var from = Number(command.from);
+          var to = Number(command.to);
+          if (!Number.isInteger(from) || !Number.isInteger(to) || from < 0 || to < 0 || from >= queue.length || to >= queue.length || from === to) break;
+          var moved = queue.splice(from, 1)[0];
+          queue.splice(to, 0, moved);
+          if (index === from) index = to;
+          else {
+            if (from < index) index -= 1;
+            if (to <= index) index += 1;
+          }
+          broadcast();
+          break;
+        }
+        case "queueClear":
+          var current = currentTrack();
+          queue = current ? [current] : [];
+          index = current ? 0 : -1;
+          broadcast();
+          break;
+        case "getstate": broadcast(); break;
+        default: break;
+      }
+    }
+
+    function onMessage(event) {
+      if (event.source === frame.contentWindow && event.data && event.data.sbMusic) handle(event.data.sbMusic);
+    }
+
+    function onVolume(event) {
+      if (String(event.detail && event.detail.source || "") !== sourceId) return;
+      audio.volume = Math.max(0, Math.min(1, Number(event.detail.volume) || 0));
+      try { localStorage.setItem("neo_stream_music_volume", String(audio.volume)); } catch (error) {}
+      broadcast();
+    }
+
+    ["play", "pause", "playing", "loadedmetadata", "durationchange", "timeupdate", "volumechange", "ratechange"].forEach(function (name) {
+      audio.addEventListener(name, broadcast);
+    });
+    audio.addEventListener("ended", function () { if (!audio.loop) next(); });
+    audio.addEventListener("error", function () {
+      if (!wantsPlayback) return;
+      failures += 1;
+      if (failures < 2 && currentTrack()) window.setTimeout(function () { loadTrack(index, true); }, 500);
+      else { wantsPlayback = false; broadcast(); }
+    });
+    window.addEventListener("message", onMessage);
+    window.addEventListener("neo-media-volume-request", onVolume);
+    if ("mediaSession" in navigator) {
+      try { navigator.mediaSession.setActionHandler("play", function () { if (currentTrack()) audio.play().catch(function () {}); }); } catch (error) {}
+      try { navigator.mediaSession.setActionHandler("pause", function () { audio.pause(); }); } catch (error) {}
+      try { navigator.mediaSession.setActionHandler("nexttrack", next); } catch (error) {}
+      try { navigator.mediaSession.setActionHandler("previoustrack", previous); } catch (error) {}
+    }
+    return { audio: audio, broadcast: broadcast };
+  }
+
   function createShell(app, body, iconMarkup) {
     body.classList.add("music-unified-window-body");
     body.innerHTML =
@@ -50,6 +314,7 @@
     frame.fetchPriority = "high";
     session.append(frame, loader);
     panel.replaceChildren(session);
+    session._neoPlayback = createDirectPlaybackBridge(frame, target);
 
     var retry = loader.querySelector("[data-music-direct-retry]");
     var slowTimer = 0;
