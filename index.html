@@ -1,85 +1,85 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>NEO OS</title>
-<style>
-html,body{height:100%;margin:0;background:#05070b;color:#fff;font-family:system-ui}body{display:grid;place-items:center}#choose{text-align:center}button{margin:6px;padding:13px 18px;border:0;border-radius:10px;background:#5b5cf0;color:#fff;font-weight:700;cursor:pointer}button+button{background:#252830}button:disabled{opacity:.45;cursor:wait}p{font-size:13px;color:#9ba3b4}iframe{position:fixed;inset:0;width:100%;height:100%;border:0;background:#000}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>NEO OS</title>
+  <style>
+    html,body{height:100%;margin:0;background:#05070b;color:#fff;font-family:system-ui,sans-serif}
+    body{display:grid;place-items:center}
+    #choose{text-align:center}
+    button{margin:6px;padding:13px 18px;border:0;border-radius:10px;background:#fff;color:#05070b;font-weight:700;cursor:pointer}
+    button+button{background:#252830;color:#fff}
+    button:disabled{opacity:.45;cursor:wait}
+    p{font-size:13px;color:#9ba3b4}
+    iframe{position:fixed;inset:0;width:100%;height:100%;border:0;background:#000}
+  </style>
 </head>
 <body>
-<div id="choose">
-<button id="blank" disabled>Open in about:blank</button>
-<button id="full" disabled>Full screen</button>
-<p id="status">Loading the newest NEO OS…</p>
-</div>
-<script>
-const u = "unblockedgames99x-code"
-const r = "dshsfdghaswerweq"
-const b = "e751e30d0a5c2b916db70df392449cbcaff8ba3a"
-const p = "neo-os/index.html"
-const f = ""
+  <div id="choose">
+    <button id="blank" disabled>Open in about:blank</button>
+    <button id="full" disabled>Full screen</button>
+    <p id="status">Checking NEO OS...</p>
+  </div>
+  <script>
+    (() => {
+      "use strict";
 
-const urls = [
-`https://cdn.jsdelivr.net/gh/${u}/${r}@${b}/${p}${f}`,
-`https://fastly.jsdelivr.net/gh/${u}/${r}@${b}/${p}${f}`,
-`https://quantil.jsdelivr.net/gh/${u}/${r}@${b}/${p}${f}`,
-`https://originfastly.jsdelivr.net/gh/${u}/${r}@${b}/${p}${f}`,
-`https://gcore.jsdelivr.net/gh/${u}/${r}@${b}/${p}${f}`
-]
+      // NEO must run from a real HTTPS origin so ChromeOS can start its worker.
+      const hostedApp = "https://unblockedgames99x-code.github.io/dshsfdghaswerweq/neo-os/";
+      const blankButton = document.getElementById("blank");
+      const fullButton = document.getElementById("full");
+      const status = document.getElementById("status");
 
-let site = ""
-const blank = document.getElementById("blank")
-const full = document.getElementById("full")
-const status = document.getElementById("status")
+      function createFrame(targetDocument, url) {
+        const frame = targetDocument.createElement("iframe");
+        frame.src = url;
+        frame.title = "NEO OS";
+        frame.allow = "autoplay; clipboard-read; clipboard-write; fullscreen; gamepad";
+        frame.allowFullscreen = true;
+        frame.referrerPolicy = "strict-origin-when-cross-origin";
+        return frame;
+      }
 
-function prepare(h, url) {
-const base = new URL("./", url).href
-const add = `<base href="${base}" target="_self"><meta name="neo-runner" content="1"><script>addEventListener("pointerdown",()=>{if(!document.fullscreenElement)document.documentElement.requestFullscreen({navigationUI:"hide"}).catch(()=>{})},{once:true})<\/script>`
-h = h.replace(/<base\b[^>]*>/gi, "")
-return /<head(?:\s[^>]*)?>/i.test(h) ? h.replace(/<head(?:\s[^>]*)?>/i, x => x + add) : add + h
-}
+      function enableLaunch() {
+        blankButton.disabled = false;
+        fullButton.disabled = false;
+        status.textContent = "Choose how to launch NEO OS";
+      }
 
-async function load() {
-for (let i = 0; i < urls.length; i++) {
-try {
-const res = await fetch(urls[i] + "?v=" + Date.now(), {cache:"no-store"})
-if (res.ok) {
-const h = await res.text()
-if (!/<html[\s>]/i.test(h)) continue
-site = prepare(h, urls[i])
-blank.disabled = full.disabled = false
-status.textContent = "Choose how to launch NEO OS"
-return
-}
-} catch (e) {}
-}
-status.textContent = "NEO OS could not load"
-}
+      blankButton.addEventListener("click", () => {
+        const popup = window.open("about:blank", "_blank");
+        if (!popup) {
+          status.textContent = "Allow pop-ups and try again.";
+          return;
+        }
+        popup.document.open();
+        popup.document.write("<!doctype html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>NEO OS</title><style>html,body{height:100%;margin:0;overflow:hidden;background:#000}iframe{width:100%;height:100%;border:0}</style></head><body></body></html>");
+        popup.document.close();
+        popup.document.body.appendChild(createFrame(popup.document, hostedApp));
+        popup.focus();
+        const requestFullscreen = popup.document.documentElement.requestFullscreen;
+        if (requestFullscreen) {
+          Promise.resolve(requestFullscreen.call(popup.document.documentElement, { navigationUI: "hide" })).catch(() => {});
+        }
+      });
 
-blank.onclick = () => {
-const w = open("about:blank", "_blank")
-if (!w) return status.textContent = "Allow pop-ups and try again"
-w.document.open()
-w.document.write(site)
-w.document.close()
-w.focus()
-const go = w.document.documentElement.requestFullscreen
-if (go) Promise.resolve(go.call(w.document.documentElement, {navigationUI:"hide"})).catch(()=>{})
-}
+      fullButton.addEventListener("click", () => {
+        const frame = createFrame(document, hostedApp);
+        document.body.replaceChildren(frame);
+        const requestFullscreen = frame.requestFullscreen || frame.webkitRequestFullscreen;
+        if (requestFullscreen) {
+          Promise.resolve(requestFullscreen.call(frame, { navigationUI: "hide" })).catch(() => {});
+        }
+      });
 
-full.onclick = () => {
-const frame = document.createElement("iframe")
-frame.allow = "autoplay; clipboard-read; clipboard-write; fullscreen; gamepad"
-frame.allowFullscreen = true
-frame.srcdoc = site
-document.body.replaceChildren(frame)
-const go = frame.requestFullscreen || frame.webkitRequestFullscreen
-if (go) Promise.resolve(go.call(frame, {navigationUI:"hide"})).catch(()=>{})
-}
-
-load()
-</script>
+      fetch(`${hostedApp}?launcher-check=${Date.now()}`, {
+        mode: "no-cors",
+        cache: "no-store"
+      }).then(enableLaunch).catch(() => {
+        status.textContent = "NEO OS could not load. Check your connection and refresh.";
+      });
+    })();
+  </script>
 </body>
 </html>

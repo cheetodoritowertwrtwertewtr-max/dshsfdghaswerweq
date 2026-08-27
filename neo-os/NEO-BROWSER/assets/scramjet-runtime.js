@@ -2,17 +2,17 @@
   "use strict";
 
   const pageBase = new URL("./", document.baseURI);
-  const serviceWorkerUrl = new URL("sw.js?v=20260827-jet-v2", pageBase);
+  const serviceWorkerUrl = new URL("sw.js?v=20260827-chromeos-v1", pageBase);
   const serviceWorkerScope = pageBase.pathname;
   const proxyBase = new URL("~/", pageBase).pathname;
   const relayCacheKey = "neo:jet:last-relay:v1";
   const relayHosts = [
+    "wss://girlspreples.org/wi/",
     "cdn.northstreetumc.org",
     "cdn.vipersfootball.com",
     "cdn.pcesc.org",
     "cdn.kcchallengevbc.com",
     "cdn.slcbmooc.org",
-    "wss://girlspreples.org/wi/",
   ];
 
   let initializePromise = null;
@@ -53,7 +53,9 @@
   }
 
   function relayCandidates() {
-    const values = [];
+    // Start with the bundled endpoint that passes a complete HTTPS transfer.
+    // A stale cached endpoint is still considered, but cannot block startup.
+    const values = [relayHosts[0]];
     try {
       values.push(localStorage.getItem("neo:wisp:last-working:v1"));
       values.push(localStorage.getItem("neo:wisp:v1"));
@@ -65,7 +67,7 @@
     } catch {
       // The bundled relay list remains available when storage is unavailable.
     }
-    values.push(...relayHosts);
+    values.push(...relayHosts.slice(1));
     return [...new Set(values.map(normalizeRelay).filter(Boolean))];
   }
 
@@ -95,21 +97,6 @@
       socket.onerror = () => finish();
       socket.onclose = () => finish();
     });
-  }
-
-  async function selectRelay() {
-    let healthy;
-    try {
-      healthy = await Promise.any(relayCandidates().map(async (url) => {
-        const result = await probeRelay(url);
-        if (!result) throw new Error(`Relay unavailable: ${url}`);
-        return result;
-      }));
-    } catch {
-      throw new Error("No compatible relay is currently reachable.");
-    }
-    try { localStorage.setItem(relayCacheKey, healthy.url); } catch {}
-    return healthy.url;
   }
 
   function waitForWorkerState(worker, expectedState) {
@@ -170,16 +157,52 @@
     throw new Error("The network transport did not initialize in time.");
   }
 
+  async function verifyTransport(instance) {
+    const abortController = new AbortController();
+    const timer = window.setTimeout(() => abortController.abort(), 6500);
+    try {
+      const response = await instance.request(
+        new URL("https://example.com/"),
+        "GET",
+        null,
+        [["accept", "text/html"]],
+        abortController.signal
+      );
+      if (!response || response.status < 200 || response.status >= 500) {
+        throw new Error(`Relay health request failed with status ${response?.status || 0}.`);
+      }
+      try { await response.body?.cancel(); } catch {}
+    } finally {
+      window.clearTimeout(timer);
+    }
+  }
+
+  async function selectTransport(transportModule) {
+    for (const relay of relayCandidates()) {
+      const reachable = await probeRelay(relay);
+      if (!reachable) continue;
+      try {
+        const transport = new transportModule.default({ wisp: relay });
+        await initializeTransport(transport);
+        await verifyTransport(transport);
+        try { localStorage.setItem(relayCacheKey, relay); } catch {}
+        return transport;
+      } catch {
+        // A websocket handshake alone is not enough. ChromeOS must be able to
+        // complete a real HTTPS request before this endpoint can be selected.
+      }
+    }
+    throw new Error("No compatible relay is currently reachable.");
+  }
+
   async function initialize() {
     if (initializePromise) return initializePromise;
     initializePromise = (async () => {
       if (!globalThis.$scramjetController?.Controller) throw new Error("The Jet runtime did not load.");
       await ensureServiceWorker();
 
-      const relay = await selectRelay();
       const transportModule = await import(new URL("curl/index.mjs", pageBase).href);
-      const transport = new transportModule.default({ wisp: relay });
-      await initializeTransport(transport);
+      const transport = await selectTransport(transportModule);
 
       controller = new globalThis.$scramjetController.Controller({
         serviceworker: navigator.serviceWorker.controller,
