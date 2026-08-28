@@ -338,7 +338,7 @@
       "html-games": "./assets/html-games.svg?v=20260827-blue-controller-v1",
       zstream: "./assets/zstream.png?v=20260827-zstream-official-v1",
       discord: "./assets/discord-official.png?v=20260828-user-artwork-v2",
-      youtube: "./assets/youtube.svg?v=20260828-youtube-v1"
+      youtube: "./assets/youtube-official.webp?v=20260828-user-artwork-v1"
     };
     if (imageIcons[name]) return '<img class="app-image-icon" src="' + imageIcons[name] + '" width="24" height="24" alt="">';
     return '<svg class="icon" aria-hidden="true"><use href="#i-' + name + '"></use></svg>';
