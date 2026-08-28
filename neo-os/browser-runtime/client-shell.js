@@ -685,6 +685,159 @@
   const pendingAudioTrackReset = new WeakSet();
   const audioTrackResetVersion = new WeakMap();
   const mediaMotionQuery = window.matchMedia?.("(prefers-reduced-motion: reduce)");
+  let pictureInPictureButton = null;
+  let pictureInPictureVideo = null;
+  let pictureInPictureFrame = 0;
+  let pictureInPicturePointer = null;
+
+  function importantStyle(element, properties) {
+    Object.entries(properties).forEach(([name, value]) => element.style.setProperty(name, value, "important"));
+  }
+
+  function ensurePictureInPictureButton() {
+    if (pictureInPictureButton?.isConnected) return pictureInPictureButton;
+    if (!document.pictureInPictureEnabled) return null;
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.setAttribute("aria-label", "Pop video out");
+    button.title = "Pop video out";
+    button.dataset.neoVideoPopout = "true";
+    importantStyle(button, {
+      all: "initial",
+      position: "fixed",
+      display: "none",
+      width: "38px",
+      height: "32px",
+      padding: "0",
+      margin: "0",
+      color: "#fff",
+      background: "rgba(8, 8, 9, 0.82)",
+      border: "0",
+      "border-radius": "6px",
+      "box-shadow": "0 5px 18px rgba(0, 0, 0, 0.34)",
+      "backdrop-filter": "blur(12px)",
+      "-webkit-backdrop-filter": "blur(12px)",
+      cursor: "pointer",
+      "z-index": "2147483647",
+      "box-sizing": "border-box",
+    });
+
+    const screen = document.createElement("span");
+    importantStyle(screen, {
+      position: "absolute",
+      left: "9px",
+      top: "8px",
+      width: "18px",
+      height: "13px",
+      border: "1.5px solid currentColor",
+      "border-radius": "2px",
+      "box-sizing": "border-box",
+    });
+    const inset = document.createElement("span");
+    importantStyle(inset, {
+      position: "absolute",
+      right: "6px",
+      bottom: "6px",
+      width: "10px",
+      height: "8px",
+      background: "#fff",
+      border: "2px solid rgba(8, 8, 9, 0.9)",
+      "border-radius": "2px",
+      "box-sizing": "border-box",
+    });
+    button.append(screen, inset);
+
+    ["pointerdown", "pointerup"].forEach((name) => {
+      button.addEventListener(name, (event) => {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }, true);
+    });
+    button.addEventListener("click", async (event) => {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      const video = pictureInPictureVideo;
+      if (!(video instanceof HTMLVideoElement)) return;
+      try {
+        if (document.pictureInPictureElement) {
+          await document.exitPictureInPicture();
+        } else {
+          video.disablePictureInPicture = false;
+          await video.requestPictureInPicture();
+        }
+      } catch (error) {
+        // Permissions policies and the source site can still deny Picture-in-Picture.
+      }
+    });
+    (document.body || document.documentElement).appendChild(button);
+    pictureInPictureButton = button;
+    return button;
+  }
+
+  function pictureInPictureCandidateAt(x, y) {
+    const elements = typeof document.elementsFromPoint === "function" ? document.elementsFromPoint(x, y) : [];
+    const direct = elements.find((element) => element instanceof HTMLVideoElement);
+    if (direct) return direct;
+    return Array.from(document.querySelectorAll("video")).find((video) => {
+      const rect = video.getBoundingClientRect();
+      return rect.width >= 160 && rect.height >= 90 && x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+    }) || null;
+  }
+
+  function positionPictureInPictureButton() {
+    pictureInPictureFrame = 0;
+    const button = ensurePictureInPictureButton();
+    const video = pictureInPictureVideo;
+    if (!button || !(video instanceof HTMLVideoElement) || !video.isConnected || typeof video.requestPictureInPicture !== "function") {
+      if (button) button.style.setProperty("display", "none", "important");
+      return;
+    }
+    const rect = video.getBoundingClientRect();
+    const visible = rect.width >= 160 && rect.height >= 90 && rect.bottom > 0 && rect.right > 0 && rect.top < innerHeight && rect.left < innerWidth;
+    if (!visible) {
+      button.style.setProperty("display", "none", "important");
+      return;
+    }
+    const left = Math.max(8, Math.min(innerWidth - 46, rect.right - 48));
+    const top = Math.max(8, Math.min(innerHeight - 40, rect.top + 10));
+    button.style.setProperty("left", `${Math.round(left)}px`, "important");
+    button.style.setProperty("top", `${Math.round(top)}px`, "important");
+    button.style.setProperty("display", "block", "important");
+    button.title = document.pictureInPictureElement === video ? "Close video pop-out" : "Pop video out";
+    button.setAttribute("aria-label", button.title);
+  }
+
+  function schedulePictureInPicturePosition() {
+    if (pictureInPictureFrame) return;
+    pictureInPictureFrame = requestAnimationFrame(positionPictureInPictureButton);
+  }
+
+  function selectPictureInPictureVideo(video) {
+    if (!(video instanceof HTMLVideoElement)) return;
+    pictureInPictureVideo = video;
+    schedulePictureInPicturePosition();
+  }
+
+  document.addEventListener("pointermove", (event) => {
+    pictureInPicturePointer = { x: event.clientX, y: event.clientY };
+    if (pictureInPictureButton?.contains(event.target)) return;
+    const candidate = pictureInPictureCandidateAt(event.clientX, event.clientY);
+    if (candidate) selectPictureInPictureVideo(candidate);
+  }, { capture: true, passive: true });
+  document.addEventListener("playing", (event) => {
+    if (event.target instanceof HTMLVideoElement) selectPictureInPictureVideo(event.target);
+  }, true);
+  document.addEventListener("loadedmetadata", (event) => {
+    if (event.target instanceof HTMLVideoElement && pictureInPicturePointer) {
+      const candidate = pictureInPictureCandidateAt(pictureInPicturePointer.x, pictureInPicturePointer.y);
+      if (candidate) selectPictureInPictureVideo(candidate);
+    }
+  }, true);
+  document.addEventListener("enterpictureinpicture", schedulePictureInPicturePosition, true);
+  document.addEventListener("leavepictureinpicture", schedulePictureInPicturePosition, true);
+  window.addEventListener("scroll", schedulePictureInPicturePosition, true);
+  window.addEventListener("resize", schedulePictureInPicturePosition, { passive: true });
 
   function metadataContent(selector) {
     return document.querySelector(selector)?.getAttribute("content")?.trim() || "";
@@ -1031,6 +1184,10 @@
       activeMediaElement.volume = volume;
       if (volume > 0) activeMediaElement.muted = false;
       scheduleMediaReport(activeMediaElement, 0);
+    } else if (event.data?.type === "neo-shell:set-muted") {
+      const muted = Boolean(event.data.muted);
+      document.querySelectorAll("audio, video").forEach((media) => { media.muted = muted; });
+      if (activeMediaElement) scheduleMediaReport(activeMediaElement, 0);
     }
   });
   window.addEventListener("keydown", (event) => {

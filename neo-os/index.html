@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-boot="pending" data-wallpaper="neo">
+<html lang="en" data-boot="pending" data-wallpaper="we-steam-1403160205">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -72,22 +72,26 @@
     <link rel="dns-prefetch" href="//vcsa.huangqirui.xyz" />
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
     <link rel="dns-prefetch" href="//cdn.jsdelivr.net" />
-    <link rel="preconnect" href="https://cinehd.vc" crossorigin />
-    <link rel="dns-prefetch" href="//cinehd.vc" />
+    <link rel="preconnect" href="https://zstream.mov" crossorigin />
+    <link rel="dns-prefetch" href="//zstream.mov" />
+    <link rel="preconnect" href="https://discord.com" crossorigin />
+    <link rel="dns-prefetch" href="//discord.com" />
     <link rel="preconnect" href="https://web-dashers.github.io" crossorigin />
     <link rel="dns-prefetch" href="//web-dashers.github.io" />
     <link rel="prefetch" href="./NEO-BROWSER/index.html" />
     <link rel="prefetch" href="../games/web-dashers.html" />
     <link rel="stylesheet" href="./neo-os.css?v=20260826-compiler-window-layer-v2" />
     <link rel="stylesheet" href="./neo-taskbar-menu.css?v=20260825-alignment-v1" />
-    <link rel="stylesheet" href="./neo-taskbar-preview.css?v=20260825-window-hover-v2" />
-    <link rel="stylesheet" href="./neo-apps.css?v=20260827-cinehd-official-v1" />
+    <link rel="stylesheet" href="./neo-taskbar-preview.css?v=20260827-minimized-tray-v1" />
+    <link rel="stylesheet" href="./neo-apps.css?v=20260827-retro-icons-v2" />
     <link rel="stylesheet" href="./neo-window-resize.css?v=20260815-stability-v1" />
     <link rel="stylesheet" href="./neo-wallpaper-engine.css?v=20260825-white-accents-v1" />
     <link rel="stylesheet" href="./neo-rainmeter.css?v=20260825-default-center-v1" />
     <link rel="stylesheet" href="./neo-launcher-glass.css?v=20260820-profile-outline-v2" />
     <link rel="stylesheet" href="./neo-browser-ui.css?v=20260825-home-tabs-v2" />
     <link rel="stylesheet" href="./neo-flat-ui.css?v=20260819-launcher-oled-v1" />
+    <link rel="stylesheet" href="./neo-vertical-taskbar.css?v=20260827-vertical-shelf-v2" />
+    <link rel="stylesheet" href="./neo-retro-theme.css?v=20260827-media-glass-v1" />
     <title>NEO OS</title>
   </head>
   <body>
@@ -274,8 +278,8 @@
           <button class="topbar-logo" type="button" data-open-launcher aria-label="Open apps">
             <img src="./assets/neo-logo.svg" width="28" height="28" alt="" />
           </button>
-          <button class="topbar-media" type="button" data-topbar-media data-app="media" aria-label="Open Media Player" hidden>
-            <span class="topbar-media-art"><img data-topbar-media-cover alt="" width="18" height="18" hidden /><img class="app-image-icon" data-topbar-media-fallback src="./assets/spotify.svg?v=20260824-spotify-v1" width="18" height="18" alt="" /></span>
+          <button class="topbar-media" type="button" data-topbar-media data-app="stream" aria-label="Open Music" hidden>
+            <span class="topbar-media-art"><img data-topbar-media-cover alt="" width="18" height="18" hidden /><img class="app-image-icon" data-topbar-media-fallback src="./assets/spotify-official.png?v=20260827-user-artwork-v1" width="18" height="18" alt="" /></span>
             <strong data-topbar-media-title>Nothing playing</strong>
             <span class="topbar-media-time" data-topbar-media-time hidden>0:00 / 0:00</span>
             <span class="topbar-media-wave" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
@@ -351,10 +355,10 @@
               <span class="status-pill" data-now-playing-state>PAUSED</span>
             </span>
           </div>
-          <button type="button" class="widget-action now-playing-open" data-app="media">
+          <button type="button" class="widget-action now-playing-open" data-app="stream">
             <span class="widget-app-icon now-playing-art" data-now-playing-art>
               <img class="now-playing-cover" data-now-playing-cover width="40" height="40" alt="" referrerpolicy="no-referrer" hidden />
-              <span class="now-playing-art-fallback app-icon-stream" data-now-playing-fallback><img class="app-image-icon" src="./assets/spotify.svg?v=20260824-spotify-v1" width="40" height="40" alt="" /></span>
+              <span class="now-playing-art-fallback app-icon-stream" data-now-playing-fallback><img class="app-image-icon" src="./assets/spotify-official.png?v=20260827-user-artwork-v1" width="40" height="40" alt="" /></span>
             </span>
             <span class="now-playing-details">
               <strong data-now-playing-title>Nothing playing</strong>
@@ -397,25 +401,8 @@
 
         <div class="launcher-scroll-region">
           <section class="launcher-section pinned-section" data-launcher-home>
-            <div class="launcher-section-title">
-              <h3>Pinned</h3>
-              <button class="launcher-text-button" type="button" data-launcher-toggle-all aria-expanded="false">
-                <span>Show all</span>
-                <svg class="icon" aria-hidden="true"><use href="#i-chevron"></use></svg>
-              </button>
-            </div>
+            <h3 class="sr-only">Applications</h3>
             <div id="launcher-grid" class="pinned-app-grid"></div>
-          </section>
-
-          <section class="launcher-section recent-section" data-launcher-home>
-            <div class="launcher-section-title"><h3>Recently opened</h3></div>
-            <div id="launcher-recent" class="recent-app-grid"></div>
-            <p id="launcher-recent-empty" class="launcher-empty compact">Applications you open will appear here.</p>
-          </section>
-
-          <section class="launcher-section category-section" data-launcher-home>
-            <div class="launcher-section-title"><h3>All</h3><span>View: Category</span></div>
-            <div id="launcher-categories" class="category-grid"></div>
           </section>
 
           <section class="launcher-section launcher-results" data-launcher-results hidden aria-live="polite">
@@ -425,24 +412,15 @@
           </section>
         </div>
 
-        <footer class="launcher-footer">
-          <div class="launcher-profile">
-            <img src="./assets/neo-logo.svg" width="32" height="32" alt="" />
-            <span><strong>NEO OS</strong></span>
-          </div>
-        </footer>
       </section>
 
       <nav class="taskbar" aria-label="System taskbar">
         <div class="taskbar-center">
           <button class="taskbar-start-button" type="button" data-open-launcher aria-label="Open apps">
-            <img src="./assets/neo-logo.svg?v=20260819-launcher-oled-v1" width="30" height="30" alt="" />
+            <svg class="icon taskbar-launcher-icon" aria-hidden="true"><use href="#i-apps"></use></svg>
             <span class="sr-only">Apps</span>
           </button>
           <div class="dock" id="neo-dock" aria-label="Pinned apps">
-            <button class="dock-button" type="button" data-app="apps" aria-label="My Apps" data-tooltip="My Apps">
-              <span class="dock-app-tile dock-app-art app-icon-shape app-icon-apps"><svg class="icon" aria-hidden="true"><use href="#i-apps"></use></svg></span>
-            </button>
             <button class="dock-button" type="button" data-app="browser" aria-label="Open web app">
               <span class="dock-app-art app-icon-shape app-icon-duckduckgo"><img class="app-image-icon" src="./assets/duckduckgo.png" width="32" height="32" alt="" /></span>
             </button>
@@ -450,13 +428,13 @@
               <span class="dock-app-tile dock-app-art app-icon-shape app-icon-google-drive"><img class="app-image-icon" src="./assets/google-drive.svg?v=20260824-drive-logo-v3" width="32" height="32" alt="" /></span>
             </button>
             <button class="dock-button" type="button" data-app="zones" aria-label="HTML Games" data-tooltip="HTML Games">
-              <span class="dock-app-tile dock-app-art app-icon-shape app-icon-gamepad"><svg class="icon" aria-hidden="true"><use href="#i-gamepad"></use></svg></span>
+              <span class="dock-app-tile dock-app-art app-icon-shape app-icon-html-games"><img class="app-image-icon" src="./assets/html-games.svg?v=20260827-blue-controller-v1" width="32" height="32" alt="" /></span>
             </button>
             <button class="dock-button" type="button" data-app="chat" aria-label="Messages" data-tooltip="Messages">
               <span class="dock-app-tile dock-app-art app-icon-shape app-icon-chat"><img class="app-image-icon" src="./assets/messages.png" width="32" height="32" alt="" /></span>
             </button>
             <button class="dock-button" type="button" data-app="media" aria-label="Media Player" data-tooltip="Media Player">
-              <span class="dock-app-tile dock-app-art app-icon-shape app-icon-film"><svg class="icon" aria-hidden="true"><use href="#i-film"></use></svg></span>
+              <span class="dock-app-tile dock-app-art app-icon-shape app-icon-media-player"><img class="app-image-icon" src="./assets/media-player.svg?v=20260827-high-resolution-v1" width="32" height="32" alt="" /></span>
             </button>
             <button class="dock-button" type="button" data-app="wallpaper" aria-label="Wallpaper studio" data-tooltip="Wallpaper">
               <span class="dock-app-tile dock-app-art app-icon-shape app-icon-wallpaper"><img class="app-image-icon" src="./assets/wallpaper-engine.png" width="32" height="32" alt="" /></span>
@@ -1146,12 +1124,12 @@
     </template>
 
     <script src="./neo-frame-loader.js?v=20260826-compiler-html-v1" defer></script>
-    <script src="./neo-apps.js?v=20260827-cinehd-web-dashers-v1" defer></script>
+    <script src="./neo-apps.js?v=20260827-retired-apps-v2" defer></script>
     <script src="./neo-music-runtime.js?v=20260827-max-volume-v3" defer></script>
-    <script src="./neo-wallpaper-engine.js?v=20260826-compiler-html-v1" defer></script>
+    <script src="./neo-wallpaper-engine.js?v=20260827-exact-wallpaper-v1" defer></script>
     <script src="./neo-wallpaper-quality.js?v=20260804-quality-v7" defer></script>
-    <script src="./neo-taskbar-preview.js?v=20260825-window-hover-v3" defer></script>
-    <script src="./neo-os.js?v=20260827-cinehd-media-routing-v1" defer></script>
+    <script src="./neo-taskbar-preview.js?v=20260827-minimized-tray-v1" defer></script>
+    <script src="./neo-os.js?v=20260827-apps-wallpaper-routing-v2" defer></script>
     <script src="./neo-window-resize.js?v=20260803-fullscreen-v1" defer></script>
     <script src="./neo-taskbar-menu.js?v=20260805-desktop-menu-v3" defer></script>
     <script src="./neo-rainmeter.js?v=20260825-default-center-v1" defer></script>

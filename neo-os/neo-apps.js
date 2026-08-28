@@ -22,11 +22,11 @@
     },
     cinehd: {
       id: "cinehd",
-      title: "CineHD",
+      title: "Z-Stream",
       subtitle: "Movies and series",
-      icon: "cinehd",
+      icon: "zstream",
       template: "browser-template",
-      browserTarget: "https://cinehd.vc/home",
+      browserTarget: "https://zstream.mov/",
       browserChrome: false,
       keepAlive: true,
       width: 1180,
@@ -34,7 +34,23 @@
       launcher: true,
       pinned: false,
       category: "Media",
-      aliases: ["cinehd", "cine hd", "movies", "series", "tv", "streaming"]
+      aliases: ["zstream", "z-stream", "cinehd", "cine hd", "movies", "series", "tv", "streaming"]
+    },
+    discord: {
+      id: "discord",
+      title: "Discord",
+      subtitle: "Messages, calls, and communities",
+      icon: "discord",
+      template: "browser-template",
+      browserTarget: "https://discord.com/app",
+      browserChrome: false,
+      keepAlive: true,
+      width: 1180,
+      height: 760,
+      launcher: true,
+      pinned: false,
+      category: "Social",
+      aliases: ["discord", "servers", "communities", "voice", "calls", "friends"]
     },
     "geometry-dash": {
       id: "geometry-dash",
@@ -104,20 +120,6 @@
       core: true,
       category: "Utilities",
       aliases: ["clock", "time", "stopwatch", "timer"]
-    },
-    photos: {
-      id: "photos",
-      title: "Photos",
-      subtitle: "View pictures from this device",
-      icon: "image",
-      lazy: true,
-      width: 980,
-      height: 700,
-      launcher: true,
-      pinned: false,
-      core: true,
-      category: "Creativity",
-      aliases: ["photos", "images", "gallery", "pictures"]
     }
   });
 
@@ -214,16 +216,6 @@
       localStorage.setItem(filesMigrationKey, "1");
     }
 
-    var myAppsMigrationKey = "neo_os_my_apps_pin_v1";
-    if (localStorage.getItem(myAppsMigrationKey) !== "1") {
-      var appPins = JSON.parse(localStorage.getItem("neo_os_pinned_apps_v1") || "null");
-      if (Array.isArray(appPins) && appPins.length && appPins.indexOf("apps") === -1) {
-        appPins.unshift("apps");
-        localStorage.setItem("neo_os_pinned_apps_v1", JSON.stringify(appPins));
-      }
-      localStorage.setItem(myAppsMigrationKey, "1");
-    }
-
     var geometryDashMigrationKey = "neo_os_geometry_dash_app_v1";
     if (localStorage.getItem(geometryDashMigrationKey) !== "1") {
       ["neo_os_pinned_apps_v1", "neo_os_installed_apps_v1"].forEach(function (key) {
@@ -244,6 +236,28 @@
         localStorage.setItem("neo_os_installed_apps_v1", JSON.stringify(installedApps));
       }
       localStorage.setItem(cineHdMigrationKey, "1");
+    }
+
+    var discordMigrationKey = "neo_os_discord_app_v1";
+    if (localStorage.getItem(discordMigrationKey) !== "1") {
+      var discordApps = JSON.parse(localStorage.getItem("neo_os_installed_apps_v1") || "null");
+      if (Array.isArray(discordApps) && discordApps.indexOf("discord") === -1) {
+        discordApps.push("discord");
+        localStorage.setItem("neo_os_installed_apps_v1", JSON.stringify(discordApps));
+      }
+      localStorage.setItem(discordMigrationKey, "1");
+    }
+
+    var retiredOptionalAppsKey = "neo_os_remove_duplicate_and_retired_apps_v3";
+    if (localStorage.getItem(retiredOptionalAppsKey) !== "1") {
+      ["neo_os_pinned_apps_v1", "neo_os_installed_apps_v1"].forEach(function (key) {
+        var ids = JSON.parse(localStorage.getItem(key) || "null");
+        if (!Array.isArray(ids)) return;
+        localStorage.setItem(key, JSON.stringify(ids.filter(function (id) {
+          return id !== "apps" && id !== "audiobooks" && id !== "photos" && id !== "search";
+        })));
+      });
+      localStorage.setItem(retiredOptionalAppsKey, "1");
     }
   } catch (error) {}
 })();

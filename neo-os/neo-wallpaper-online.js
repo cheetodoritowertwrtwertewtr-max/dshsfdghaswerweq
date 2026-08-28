@@ -402,6 +402,8 @@
       card.setAttribute("aria-busy", "true");
       studio.dispatchEvent(new Event("neo-wallpaper-install-state"));
       var selectionRevision = studio.dataset.wallpaperSelectionRevision || "0";
+      var explicitlyRequestedApply = install.dataset.applyAfterInstall === "true";
+      var selectedWhenStarted = studio.dataset.selectedWallpaper === id;
       loadImporter().then(function (importer) {
         return importer.downloadOriginal(item, function (received, expected, phase) {
           if (phase === "verify") install.textContent = "Verifying";
@@ -410,8 +412,11 @@
       }).then(function (result) {
         card.dataset.wallpaperPlayable = "true";
         install.dataset.wallpaperInstallState = "installed";
-        result.applyAfterInstall = studio.dataset.selectedWallpaper === id
-          && (studio.dataset.wallpaperSelectionRevision || "0") === selectionRevision;
+        result.applyAfterInstall = explicitlyRequestedApply || (selectedWhenStarted
+          && studio.dataset.selectedWallpaper === id
+          && (studio.dataset.wallpaperSelectionRevision || "0") === selectionRevision);
+        if (result.applyAfterInstall && result.record) studio.dataset.selectedWallpaper = result.record.id;
+        delete install.dataset.applyAfterInstall;
         studio.dispatchEvent(new CustomEvent("neo-wallpaper-library-change", { detail: result }));
       }).catch(function (error) {
         install.dataset.wallpaperInstallState = "ready";
@@ -421,6 +426,7 @@
           detail: { title: item.title, message: error && error.message ? error.message : "The wallpaper could not be downloaded." }
         }));
       }).finally(function () {
+        delete install.dataset.applyAfterInstall;
         card.removeAttribute("aria-busy");
         setInstallState(install, card, item);
       });

@@ -3,6 +3,7 @@
 
   var api = null;
   var preview = null;
+  var minimizedTray = null;
   var showTimer = 0;
   var hideTimer = 0;
   var activeId = "";
@@ -27,6 +28,13 @@
   function cloneIcon(button) {
     var icon = button && button.querySelector(".dock-app-art");
     return icon ? icon.cloneNode(true) : document.createElement("span");
+  }
+
+  function dockButton(id) {
+    if (!api || !api.dock) return null;
+    return Array.from(api.dock.querySelectorAll(".dock-button[data-app]")).find(function (button) {
+      return button.dataset.app === id;
+    }) || null;
   }
 
   function mediaPlaceholder(button) {
@@ -117,13 +125,147 @@
     });
   }
 
+  function renderMinimizedViewport(viewport, win, button, app) {
+    viewport.textContent = "";
+    if (win.querySelectorAll("*").length > 500) {
+      viewport.appendChild(fallbackPreview(button, app, "Minimized"));
+      return;
+    }
+
+    var clone = win.cloneNode(true);
+    clone.classList.remove("is-minimized", "is-closing", "is-active", "is-dragging", "is-maximized");
+    clone.classList.add("neo-taskbar-preview-clone");
+    scrubClone(clone, button);
+    var width = Math.max(420, win.offsetWidth || parseFloat(win.style.width) || 1000);
+    var height = Math.max(300, win.offsetHeight || parseFloat(win.style.height) || 700);
+    clone.style.width = width + "px";
+    clone.style.height = height + "px";
+    viewport.appendChild(clone);
+    requestAnimationFrame(function () {
+      if (!clone.isConnected) return;
+      var scale = Math.min(viewport.clientWidth / width, viewport.clientHeight / height);
+      clone.style.transform = "scale(" + scale + ")";
+      clone.style.left = Math.round((viewport.clientWidth - width * scale) / 2) + "px";
+      clone.style.top = Math.round((viewport.clientHeight - height * scale) / 2) + "px";
+    });
+  }
+
+  function setWindowMuted(win, muted) {
+    if (!win) return;
+    win.dataset.neoMuted = muted ? "true" : "false";
+    win.querySelectorAll("audio, video").forEach(function (media) { media.muted = muted; });
+    win.querySelectorAll("iframe").forEach(function (frame) {
+      try {
+        frame.contentWindow.postMessage({ type: "neo-shell:set-muted", muted: muted }, window.location.origin);
+      } catch (error) {}
+    });
+  }
+
+  function createMinimizedCard(id, win) {
+    var app = api.apps[id];
+    var button = dockButton(id);
+    var card = document.createElement("article");
+    card.className = "neo-minimized-card";
+    card.dataset.minimizedApp = id;
+
+    var header = document.createElement("header");
+    header.className = "neo-minimized-card-header";
+    var identity = document.createElement("button");
+    identity.type = "button";
+    identity.className = "neo-minimized-card-identity";
+    identity.setAttribute("aria-label", "Restore " + appName(app));
+    var icon = cloneIcon(button);
+    icon.classList.add("neo-minimized-card-icon");
+    var title = document.createElement("strong");
+    title.textContent = appName(app);
+    identity.append(icon, title);
+
+    var controls = document.createElement("span");
+    controls.className = "neo-minimized-card-controls";
+    var mute = document.createElement("button");
+    mute.type = "button";
+    mute.className = "neo-minimized-card-mute";
+    mute.innerHTML = '<svg class="icon" aria-hidden="true"><use href="#i-volume"></use></svg>';
+    var muted = win.dataset.neoMuted === "true";
+    mute.classList.toggle("is-muted", muted);
+    mute.setAttribute("aria-pressed", muted ? "true" : "false");
+    mute.setAttribute("aria-label", (muted ? "Unmute " : "Mute ") + appName(app));
+
+    var close = document.createElement("button");
+    close.type = "button";
+    close.className = "neo-minimized-card-close";
+    close.innerHTML = '<svg class="icon" aria-hidden="true"><use href="#i-close"></use></svg>';
+    close.setAttribute("aria-label", "Close " + appName(app));
+    controls.append(mute, close);
+    header.append(identity, controls);
+
+    var open = document.createElement("button");
+    open.type = "button";
+    open.className = "neo-minimized-card-open";
+    open.setAttribute("aria-label", "Restore " + appName(app));
+    var viewport = document.createElement("span");
+    viewport.className = "neo-minimized-card-viewport";
+    open.appendChild(viewport);
+    card.append(header, open);
+    renderMinimizedViewport(viewport, win, button, app);
+
+    function restore() { api.open(id); }
+    identity.addEventListener("click", restore);
+    open.addEventListener("click", restore);
+    mute.addEventListener("click", function () {
+      var nextMuted = win.dataset.neoMuted !== "true";
+      setWindowMuted(win, nextMuted);
+      mute.classList.toggle("is-muted", nextMuted);
+      mute.setAttribute("aria-pressed", nextMuted ? "true" : "false");
+      mute.setAttribute("aria-label", (nextMuted ? "Unmute " : "Mute ") + appName(app));
+    });
+    close.addEventListener("click", function () { api.close(win); });
+    return card;
+  }
+
+  function refreshMinimizedTray() {
+    if (!minimizedTray || !api) return;
+    minimizedTray.textContent = "";
+    var minimized = [];
+    api.windows.forEach(function (win, id) {
+      if (win && win.classList.contains("is-minimized")) minimized.push({ id: id, win: win });
+    });
+    minimized.sort(function (left, right) {
+      return Number(right.win.style.zIndex || 0) - Number(left.win.style.zIndex || 0);
+    });
+    minimized.forEach(function (entry) {
+      minimizedTray.appendChild(createMinimizedCard(entry.id, entry.win));
+    });
+    minimizedTray.hidden = minimized.length === 0;
+  }
+
+  function createMinimizedTray() {
+    var tray = document.createElement("section");
+    tray.className = "neo-minimized-tray";
+    tray.hidden = true;
+    tray.setAttribute("aria-label", "Minimized windows");
+    document.body.appendChild(tray);
+    return tray;
+  }
+
   function positionPreview(button) {
     if (!preview || preview.hidden || !button || !button.isConnected) return;
     var rect = button.getBoundingClientRect();
     var width = preview.offsetWidth;
+    var height = preview.offsetHeight;
+    var taskbar = button.closest(".taskbar");
+    var taskbarRect = taskbar ? taskbar.getBoundingClientRect() : null;
+    if (taskbarRect && taskbarRect.height > taskbarRect.width * 2) {
+      var top = rect.top + rect.height / 2 - height / 2;
+      preview.style.left = Math.round(Math.min(window.innerWidth - width - 10, rect.right + 12)) + "px";
+      preview.style.top = Math.round(Math.max(10, Math.min(top, window.innerHeight - height - 10))) + "px";
+      preview.style.bottom = "auto";
+      return;
+    }
     var left = rect.left + rect.width / 2 - width / 2;
     left = Math.max(10, Math.min(left, window.innerWidth - width - 10));
     preview.style.left = Math.round(left) + "px";
+    preview.style.top = "auto";
     preview.style.bottom = Math.round(window.innerHeight - rect.top + 10) + "px";
   }
 
@@ -248,6 +390,7 @@
     if (!dock || !windows || preview) return;
     api = { dock: dock, windows: windows, apps: apps, open: open, close: close };
     preview = createPreview();
+    minimizedTray = createMinimizedTray();
     bindDock();
     window.addEventListener("resize", function () { if (anchor) positionPreview(anchor); }, { passive: true });
     window.addEventListener("blur", hideNow);
@@ -255,6 +398,20 @@
     document.addEventListener("pointerdown", function (event) {
       if (activeId && !preview.contains(event.target) && !event.target.closest(".dock-button[data-app]")) hideNow();
     }, { passive: true });
+    window.addEventListener("neo-window-state-change", function (event) {
+      var detail = event.detail || {};
+      if (detail.closed && detail.id) {
+        var card = Array.from(minimizedTray.querySelectorAll("[data-minimized-app]")).find(function (item) {
+          return item.dataset.minimizedApp === String(detail.id);
+        });
+        if (card) card.remove();
+        if (!minimizedTray.children.length) minimizedTray.hidden = true;
+        window.setTimeout(refreshMinimizedTray, 260);
+        return;
+      }
+      requestAnimationFrame(refreshMinimizedTray);
+    });
+    refreshMinimizedTray();
   }
 
   window.NEO_TASKBAR_PREVIEW = { start: start };
