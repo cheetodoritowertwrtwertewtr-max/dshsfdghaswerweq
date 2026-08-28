@@ -1,0 +1,225 @@
+/* Compact desktop shelf. Mobile keeps the familiar bottom taskbar. */
+@media (min-width: 701px) {
+  .window-layer { inset: var(--topbar-height) 0 0; }
+
+  .taskbar {
+    top: 50%;
+    right: auto;
+    bottom: auto;
+    left: 14px;
+    width: 64px;
+    height: min(660px, calc(100vh - 58px));
+    min-height: 360px;
+    display: flex;
+    flex-direction: column;
+    padding: 8px 7px;
+    overflow: visible;
+    color: #fff;
+    background: rgba(118, 124, 132, 0.38) !important;
+    border: 1px solid rgba(255, 255, 255, 0.24) !important;
+    border-radius: 14px;
+    box-shadow:
+      0 24px 58px rgba(0, 0, 0, 0.42),
+      inset 1px 0 rgba(255, 255, 255, 0.3),
+      inset -1px 0 rgba(0, 0, 0, 0.18) !important;
+    pointer-events: auto;
+    transform: translateY(-50%);
+    -webkit-backdrop-filter: blur(28px) saturate(1.18);
+    backdrop-filter: blur(28px) saturate(1.18);
+  }
+
+  html[data-taskbar-material] .taskbar {
+    background: rgba(118, 124, 132, 0.38) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(1.18) !important;
+    backdrop-filter: blur(28px) saturate(1.18) !important;
+  }
+
+  html[data-fullscreen="true"] .taskbar { transform: translateY(-50%); }
+
+  .taskbar-center {
+    position: static;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(3px, 0.7vh, 7px);
+    transform: none;
+  }
+
+  .taskbar .dock {
+    order: 1;
+    width: 100%;
+    min-height: 0;
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(2px, 0.65vh, 7px);
+    padding: 1px 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    background: transparent !important;
+    scrollbar-width: none;
+  }
+
+  .taskbar .dock::-webkit-scrollbar { display: none; }
+
+  .taskbar-start-button {
+    order: 2;
+    width: clamp(40px, 5.2vh, 48px);
+    height: clamp(40px, 5.2vh, 48px);
+    min-height: clamp(40px, 5.2vh, 48px);
+    display: grid;
+    place-items: center;
+    margin-top: auto;
+    padding: 0;
+    color: #fff;
+    background: transparent !important;
+    border: 0;
+    border-radius: 10px;
+    box-shadow: none !important;
+  }
+
+  .taskbar-start-button::before,
+  .taskbar-start-button::after {
+    content: none !important;
+    display: none !important;
+  }
+
+  .taskbar-start-button > .taskbar-launcher-icon {
+    position: static !important;
+    flex: 0 0 auto;
+    transform: none !important;
+  }
+
+  .taskbar-launcher-icon {
+    width: 26px;
+    height: 26px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+  }
+
+  .taskbar .dock-button {
+    width: clamp(36px, 5.1vh, 46px);
+    height: clamp(36px, 5.1vh, 46px);
+    min-width: clamp(36px, 5.1vh, 46px);
+    min-height: clamp(36px, 5.1vh, 46px);
+    display: grid;
+    flex: 0 0 clamp(36px, 5.1vh, 46px);
+    place-items: center;
+    padding: 0;
+    background: transparent !important;
+    border: 0;
+    border-radius: 10px;
+    box-shadow: none !important;
+    transform: none;
+  }
+
+  .taskbar .dock-button:hover,
+  .taskbar .dock-button:focus-visible,
+  .taskbar-start-button:hover,
+  .taskbar-start-button:focus-visible {
+    background: rgba(255, 255, 255, 0.14) !important;
+    box-shadow: inset 0 1px rgba(255, 255, 255, 0.18) !important;
+    transform: none;
+  }
+
+  .taskbar .dock-button .dock-app-art {
+    width: clamp(27px, 3.8vh, 34px);
+    height: clamp(27px, 3.8vh, 34px);
+    min-width: clamp(27px, 3.8vh, 34px);
+    min-height: clamp(27px, 3.8vh, 34px);
+    overflow: visible !important;
+    background: transparent !important;
+    border-radius: 0 !important;
+  }
+
+  .taskbar .dock-button .app-image-icon,
+  .taskbar .dock-button .spotify-vector {
+    width: clamp(27px, 3.8vh, 34px) !important;
+    height: clamp(27px, 3.8vh, 34px) !important;
+    object-fit: contain !important;
+    filter: drop-shadow(0 5px 7px rgba(0, 0, 0, 0.42)) !important;
+  }
+
+  .taskbar .dock-button::before {
+    top: 50%;
+    right: auto;
+    bottom: auto;
+    left: calc(100% + 13px);
+    max-width: 210px;
+    padding: 0;
+    color: #fff;
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0;
+    box-shadow: none !important;
+    font-size: 13px;
+    font-weight: 650;
+    line-height: 1.15;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9) !important;
+    transform: translate(7px, -50%);
+  }
+
+  .taskbar .dock-button:hover::before,
+  .taskbar .dock-button:focus-visible::before {
+    transform: translate(0, -50%);
+  }
+
+  .taskbar .dock-button.is-running::after {
+    top: 50%;
+    right: -4px;
+    bottom: auto;
+    left: auto;
+    width: 3px;
+    height: 9px;
+    border-radius: 999px;
+    transform: translateY(-50%);
+  }
+
+  .taskbar .dock-button.is-running:hover::before,
+  .taskbar .dock-button.is-running:focus-visible::before {
+    opacity: 1;
+  }
+
+  .taskbar-tray { display: none; }
+
+  .neo-window.is-maximized { inset: 7px 7px 7px 86px !important; }
+
+  .toast-region { bottom: 18px; left: 92px; }
+}
+
+@media (min-width: 701px) and (max-height: 660px) {
+  .taskbar {
+    top: 36px;
+    bottom: 10px;
+    height: auto;
+    min-height: 0;
+    transform: none;
+  }
+
+  html[data-fullscreen="true"] .taskbar { transform: none; }
+  .taskbar .dock, .taskbar-center { gap: 3px; }
+
+  .taskbar .dock-button {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    flex-basis: 40px;
+  }
+
+  .taskbar .dock-button .dock-app-art,
+  .taskbar .dock-button .app-image-icon,
+  .taskbar .dock-button .spotify-vector {
+    width: 28px !important;
+    height: 28px !important;
+  }
+
+  .taskbar-start-button { width: 42px; height: 42px; min-height: 42px; }
+  .taskbar .dock-button::before { display: none; }
+}

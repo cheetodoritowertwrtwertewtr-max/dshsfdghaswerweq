@@ -1112,15 +1112,9 @@
     }
     return Promise.all([getBundledLibrary(), getLibrary()]).then(function () {
       var record = recordFor(id);
-      var replaced = false;
-      if (!record && bundledLibrary[0]) {
-        record = bundledLibrary[0];
-        replaced = true;
-      }
-      if (!record) throw new Error("No verified animated wallpaper is available.");
+      if (!record) throw new Error("The selected wallpaper is not installed on this device.");
       return mountRecord(record, sequence).then(function () {
-        if (replaced) emit("fallback");
-        else if (record.id !== id) emit("alias");
+        if (record.id !== id) emit("alias");
       });
     }).catch(function (error) {
       if (error && error.name === "AbortError") return;

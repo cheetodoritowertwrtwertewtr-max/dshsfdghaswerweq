@@ -36,7 +36,7 @@
             attrs: [
               {
                 name: "src",
-                value: `${runtimeRoot}/client-shell.js?ui=${engineVersion}-shell-v9`,
+                value: `${runtimeRoot}/client-shell.js?ui=${engineVersion}-shell-v10`,
                 skip: true,
               },
               {

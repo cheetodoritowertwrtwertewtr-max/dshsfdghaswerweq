@@ -63,8 +63,8 @@
   var shellApi = null;
 
   var defaultSettings = {
-    designVersion: 11,
-    wallpaper: "neo",
+    designVersion: 12,
+    wallpaper: "we-steam-1403160205",
     wallpaperFavorites: [],
     wallpaperRecent: [],
     wallpaperFit: "cover",
@@ -109,7 +109,10 @@
     if (Number(savedSettings.brightness) === 92) savedSettings.brightness = 100;
     if (Number(savedSettings.saturation) === 82) savedSettings.saturation = 100;
   }
-  savedSettings.designVersion = 11;
+  if (savedDesignVersion < 12 && (!savedSettings.wallpaper || savedSettings.wallpaper === "neo")) {
+    savedSettings.wallpaper = "we-steam-1403160205";
+  }
+  savedSettings.designVersion = 12;
   var settings = Object.assign({}, defaultSettings, savedSettings);
   settings.wallpaperMuted = true;
   settings.wallpaperPaused = false;
@@ -118,19 +121,6 @@
   if (!windowStates || typeof windowStates !== "object" || Array.isArray(windowStates)) windowStates = {};
 
   var apps = {
-    apps: {
-      id: "apps",
-      title: "My Apps",
-      subtitle: "Organize your workspace",
-      icon: "apps",
-      lazy: true,
-      width: 920,
-      height: 680,
-      launcher: true,
-      pinned: true,
-      category: "System",
-      aliases: ["applications", "installed", "manage", "taskbar"]
-    },
     browser: {
       id: "browser",
       title: "Browse",
@@ -166,7 +156,7 @@
       id: "zones",
       title: "HTML Games",
       subtitle: "Your complete HTML game catalog",
-      icon: "gamepad",
+      icon: "html-games",
       template: "library-template",
       width: 1180,
       height: 760,
@@ -175,19 +165,6 @@
       core: true,
       category: "Games",
       aliases: ["html games", "games", "play", "arcade", "catalog", "zones"]
-    },
-    search: {
-      id: "search",
-      title: "Find HTML Games",
-      subtitle: "Search the local game catalog",
-      icon: "search",
-      template: "search-template",
-      width: 900,
-      height: 650,
-      launcher: true,
-      pinned: false,
-      category: "Games",
-      aliases: ["find games", "game search", "lookup", "search catalog", "discover"]
     },
     chat: {
       id: "chat",
@@ -220,7 +197,7 @@
       id: "media",
       title: "Media Player",
       subtitle: "Local video and picture-in-picture",
-      icon: "film",
+      icon: "media-player",
       lazy: true,
       width: 1100,
       height: 720,
@@ -340,20 +317,18 @@
 
   function iconMarkup(name) {
     if (name === "stream") {
-      return '<svg class="app-image-icon spotify-vector" viewBox="0 0 64 64" aria-hidden="true" focusable="false">' +
-        '<circle cx="32" cy="32" r="32" fill="#1ed760"/>' +
-        '<path fill="#050505" d="M47.94 46.86a2.06 2.06 0 0 1-2.83.68c-7.73-4.73-17.47-5.8-28.93-3.18a2.06 2.06 0 1 1-.92-4.01c12.55-2.87 23.32-1.64 32.01 3.67.97.6 1.27 1.87.67 2.84Zm3.77-8.39a2.58 2.58 0 0 1-3.54.85c-8.85-5.44-22.35-7.02-32.82-3.84a2.58 2.58 0 0 1-1.5-4.93c11.97-3.63 26.85-1.87 37 4.36a2.58 2.58 0 0 1 .86 3.56Zm.32-8.74c-10.63-6.31-28.2-6.9-38.34-3.9a3.09 3.09 0 1 1-1.75-5.92c11.65-3.43 31.06-2.75 43.25 4.49a3.09 3.09 0 0 1-3.16 5.33Z"/>' +
-      '</svg>';
-    }
-    if (name === "cinehd") {
-      return '<span class="app-image-icon cinehd-logo-mark" aria-hidden="true"></span>';
+      return '<img class="app-image-icon spotify-vector" src="./assets/spotify-official.png?v=20260827-user-artwork-v1" width="512" height="512" alt="">';
     }
     var imageIcons = {
       duckduckgo: "./assets/duckduckgo.png",
       chat: "./assets/messages.png",
       "geometry-dash": "./assets/geometry-dash.png",
       "google-drive": "./assets/google-drive.svg?v=20260824-drive-logo-v3",
-      wallpaper: "./assets/wallpaper-engine.png"
+      wallpaper: "./assets/wallpaper-engine.png",
+      "media-player": "./assets/media-player.svg?v=20260827-high-resolution-v1",
+      "html-games": "./assets/html-games.svg?v=20260827-blue-controller-v1",
+      zstream: "./assets/zstream.png?v=20260827-zstream-official-v1",
+      discord: "./assets/discord-official.png?v=20260827-user-artwork-v1"
     };
     if (imageIcons[name]) return '<img class="app-image-icon" src="' + imageIcons[name] + '" width="24" height="24" alt="">';
     return '<svg class="icon" aria-hidden="true"><use href="#i-' + name + '"></use></svg>';
@@ -518,8 +493,8 @@
     state.textContent = String(detail.state || (playing ? "PLAYING" : paused ? "PAUSED" : "OPEN")).slice(0, 18).toUpperCase();
     titleNode.textContent = title;
     copyNode.textContent = String(detail.copy || detail.subtitle || app.subtitle || "Now playing").trim().slice(0, 180);
-    open.dataset.app = "media";
-    open.setAttribute("aria-label", "Open Media Player for " + title);
+    open.dataset.app = appId;
+    open.setAttribute("aria-label", "Open " + app.title + " for " + title);
     fallback.className = "now-playing-art-fallback " + appIconClass(detail.icon || app.icon || "music");
     fallback.innerHTML = iconMarkup(detail.icon || app.icon || "music");
     art.style.setProperty("--media-hue", String(Number.isFinite(Number(detail.hue)) ? Number(detail.hue) : 158));
@@ -566,9 +541,9 @@
       var topbarFallback = topbarMedia.querySelector("[data-topbar-media-fallback]");
       var topbarTime = topbarMedia.querySelector("[data-topbar-media-time]");
       topbarMedia.hidden = false;
-      topbarMedia.dataset.app = "media";
+      topbarMedia.dataset.app = appId;
       topbarMedia.classList.toggle("is-playing", playing);
-      topbarMedia.setAttribute("aria-label", "Open Media Player for " + title);
+      topbarMedia.setAttribute("aria-label", "Open " + app.title + " for " + title);
       if (topbarTitle) topbarTitle.textContent = title;
       if (topbarTime) {
         topbarTime.hidden = !hasTiming;
@@ -683,10 +658,10 @@
   function applySettings(options) {
     options = options || {};
     var wallpaper = settings.wallpaper;
-    var previousWallpaper = root.dataset.wallpaper || wallpaper || "neo";
+    var previousWallpaper = root.dataset.wallpaper || wallpaper || "we-steam-1403160205";
     var wallpaperSettings = Object.assign({}, settings, { motion: effectiveWallpaperMotion() });
     var accent = buildAccentPalette(settings.taskbarAccent);
-    if (wallpaper === "custom" && !customWallpaperUrl) wallpaper = "neo";
+    if (wallpaper === "custom" && !customWallpaperUrl) wallpaper = "we-steam-1403160205";
     root.dataset.wallpaper = wallpaper;
     root.dataset.motion = wallpaperSettings.motion ? "true" : "false";
     root.dataset.weather = settings.weather && !effectiveReducedMotion() ? "true" : "false";
@@ -721,7 +696,7 @@
     if (wallpaperEngine) {
       wallpaperEngine.apply(wallpaper, wallpaperSettings).catch(function () {
         if (settings.wallpaper !== wallpaper) return;
-        var activeWallpaper = wallpaperEngine.getState().id || previousWallpaper || "neo";
+        var activeWallpaper = wallpaperEngine.getState().id || previousWallpaper || "we-steam-1403160205";
         settings.wallpaper = activeWallpaper;
         settings.wallpaperRecent = settings.wallpaperRecent.filter(function (id) { return id !== wallpaper; });
         root.dataset.wallpaper = activeWallpaper;
@@ -1078,10 +1053,13 @@
   function renderLauncher() {
     if (!launcherGrid) return;
     var available = launcherApps();
-    var ordered = available.filter(function (app) { return app.pinned; }).concat(available.filter(function (app) { return !app.pinned; }));
-    var visible = launcherShowAll ? ordered : ordered.slice(0, 6);
+    var ordered = available.filter(function (app) { return app.pinned; }).concat(
+      available.filter(function (app) { return !app.pinned; }).sort(function (left, right) {
+        return appAccessibleName(left).localeCompare(appAccessibleName(right));
+      })
+    );
     launcherGrid.textContent = "";
-    visible.forEach(function (app) { launcherGrid.appendChild(createPinnedApp(app)); });
+    ordered.forEach(function (app) { launcherGrid.appendChild(createPinnedApp(app)); });
     var toggle = launcher.querySelector("[data-launcher-toggle-all]");
     if (toggle) {
       toggle.hidden = ordered.length <= 6;
@@ -1133,7 +1111,9 @@
     var results = searchLauncherApps(query).slice(0, 24);
     launcherSelectedIndex = Math.min(launcherSelectedIndex, Math.max(0, results.length - 1));
     results.forEach(function (app, index) {
-      var button = createDetailedApp(app, "search-result", "option");
+      var button = createPinnedApp(app);
+      button.classList.add("search-result");
+      button.setAttribute("role", "option");
       button.setAttribute("aria-selected", index === launcherSelectedIndex ? "true" : "false");
       button.classList.toggle("is-selected", index === launcherSelectedIndex);
       button.dataset.launcherResultIndex = String(index);
@@ -1245,12 +1225,12 @@
       if (!document.querySelector('link[data-neo-files]')) {
         var style = document.createElement("link");
         style.rel = "stylesheet";
-        style.href = "./neo-files.css?v=20260824-drive-ui-v1";
+        style.href = "./neo-files.css?v=20260827-file-explorer-ui-v1";
         style.dataset.neoFiles = "";
         document.head.appendChild(style);
       }
       var script = document.createElement("script");
-      script.src = "./neo-files.js?v=20260824-drive-ui-v1";
+      script.src = "./neo-files.js?v=20260827-file-explorer-ui-v1";
       script.async = true;
       script.onload = function () {
         if (!window.NEO_FILES) {
@@ -2683,6 +2663,9 @@
     if (!win) return;
     var id = win.dataset.appId;
     var app = apps[id];
+    window.dispatchEvent(new CustomEvent("neo-window-state-change", {
+      detail: { id: id || "", minimized: false, closed: true }
+    }));
     if (!win.hidden) saveWindowState(win);
     if (musicRuntime.cacheWindow(win, id, openWindows, app, forceDestroy, renderDock, activateTopWindow)) return;
     if (id === "stream") renderNowPlaying({ source: "browse-media:stream", active: false });
@@ -2720,6 +2703,9 @@
     win.toggleAttribute("inert", minimized);
     if (minimized) win.setAttribute("aria-hidden", "true");
     else win.removeAttribute("aria-hidden");
+    window.dispatchEvent(new CustomEvent("neo-window-state-change", {
+      detail: { id: win.dataset.appId || "", minimized: Boolean(minimized), closed: false }
+    }));
   }
 
   function toggleMaximize(win) {
@@ -3350,7 +3336,7 @@
     if (!onlineWallpaperRuntimePromise) {
       onlineWallpaperRuntimePromise = new Promise(function (resolve, reject) {
         var script = document.createElement("script");
-        script.src = "./neo-wallpaper-online.js?v=20260825-ready-discover-v2";
+        script.src = "./neo-wallpaper-online.js?v=20260827-exact-install-v1";
         script.async = true;
         script.onload = function () {
           if (window.NEO_WALLPAPER_ONLINE) resolve(window.NEO_WALLPAPER_ONLINE);
@@ -3450,18 +3436,29 @@
 
     studio.addEventListener("neo-wallpaper-library-change", function (event) {
       var result = event.detail;
-      if (result && result.record && result.applyAfterInstall) {
-        settings.wallpaper = result.record.id;
-        settings.wallpaperFit = "cover";
-        settings.wallpaperPaused = false;
-        settings.wallpaperRecent = [result.record.id].concat(settings.wallpaperRecent.filter(function (id) { return id !== result.record.id; })).slice(0, 6);
-        applySettings();
-        wallpaperStudios().forEach(refreshWallpaperStudio);
-        showToast("Wallpaper applied", result.record.name + " is now active.", "image");
-        return;
-      }
-      wallpaperStudios().forEach(refreshWallpaperStudio);
-      if (result && result.record) showToast(result.added ? "Added to Installed" : "Already installed", result.record.name + " is ready in your wallpaper library.", "image");
+      var record = result && result.record;
+      var studios = wallpaperStudios();
+      var hydration = record && wallpaperEngine
+        ? Promise.all(studios.filter(function (item) {
+          return item.dataset.wallpaperSource === "installed";
+        }).map(function (item) {
+          return wallpaperEngine.hydrateStudio(item).then(function () { wireWallpaperStudioCards(item); });
+        }))
+        : Promise.resolve();
+      hydration.catch(function () {}).then(function () {
+        if (record && result.applyAfterInstall) {
+          settings.wallpaper = record.id;
+          settings.wallpaperFit = "cover";
+          settings.wallpaperPaused = false;
+          settings.wallpaperRecent = [record.id].concat(settings.wallpaperRecent.filter(function (id) { return id !== record.id; })).slice(0, 6);
+          applySettings();
+          studios.forEach(refreshWallpaperStudio);
+          showToast("Wallpaper applied", record.name + " is now active.", "image");
+          return;
+        }
+        studios.forEach(refreshWallpaperStudio);
+        if (record) showToast(result.added ? "Added to Installed" : "Already installed", record.name + " is ready in your wallpaper library.", "image");
+      });
     });
     studio.addEventListener("neo-wallpaper-install-state", function () {
       refreshWallpaperStudio(studio);
@@ -3782,7 +3779,7 @@
         wallpaperEngine.remove(selected).then(function () {
           settings.wallpaperFavorites = settings.wallpaperFavorites.filter(function (id) { return id !== selected; });
           settings.wallpaperRecent = settings.wallpaperRecent.filter(function (id) { return id !== selected; });
-          if (settings.wallpaper === selected) settings.wallpaper = "neo";
+          if (settings.wallpaper === selected) settings.wallpaper = "we-steam-1403160205";
           studio.dataset.selectedWallpaper = settings.wallpaper;
           applySettings();
           return Promise.all(wallpaperStudios().map(function (item) { return wallpaperEngine.hydrateStudio(item); }));
@@ -4239,15 +4236,15 @@
   function resetCustomWallpaper() {
     deleteCustomWallpaper().catch(function () {}).then(function () {
       applyCustomWallpaper(null);
-      settings.wallpaper = "neo";
+      settings.wallpaper = "we-steam-1403160205";
       settings.wallpaperFavorites = settings.wallpaperFavorites.filter(function (id) { return id !== "custom"; });
       settings.wallpaperRecent = settings.wallpaperRecent.filter(function (id) { return id !== "custom"; });
       applySettings();
       wallpaperStudios().forEach(function (studio) {
-        studio.dataset.selectedWallpaper = "neo";
+        studio.dataset.selectedWallpaper = "we-steam-1403160205";
         refreshWallpaperStudio(studio);
       });
-      showToast("Custom wallpaper removed", "NEO is active again.", "image");
+      showToast("Custom wallpaper removed", "Rainy Day is active again.", "image");
     });
   }
 
@@ -4496,7 +4493,13 @@
       if (nowPlaying) {
         event.preventDefault();
         if (!nowPlayingWidget || nowPlayingWidget.querySelector(".now-playing-controls").hidden) return;
-        loadFeatureRuntime().then(function (runtime) { runtime.transport(nowPlaying.dataset.nowPlayingAction); });
+        if (nowPlayingState && nowPlayingState.source === "audiobooks") {
+          window.dispatchEvent(new CustomEvent("neo-media-transport-request", {
+            detail: { source: nowPlayingState.source, action: nowPlaying.dataset.nowPlayingAction }
+          }));
+        } else {
+          loadFeatureRuntime().then(function (runtime) { runtime.transport(nowPlaying.dataset.nowPlayingAction); });
+        }
         return;
       }
       var accountButton = event.target.closest("[data-topbar-account]");
@@ -4720,7 +4723,7 @@
     deleteCustomWallpaper().catch(function () {}).then(function () {
       settings.wallpaperFavorites = settings.wallpaperFavorites.filter(function (id) { return id !== "custom"; });
       settings.wallpaperRecent = settings.wallpaperRecent.filter(function (id) { return id !== "custom"; });
-      if (settings.wallpaper === "custom") settings.wallpaper = "we-eagleflag";
+      if (settings.wallpaper === "custom") settings.wallpaper = "we-steam-1403160205";
       applySettings();
     });
   }

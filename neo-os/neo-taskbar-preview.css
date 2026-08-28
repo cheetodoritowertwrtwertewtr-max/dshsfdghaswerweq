@@ -150,10 +150,145 @@
 .dock-button.is-running:hover::before,
 .dock-button.is-running:focus-visible::before { opacity: 0; }
 
+.neo-minimized-tray {
+  position: fixed;
+  z-index: 5650;
+  top: 38px;
+  left: 50%;
+  max-width: min(760px, calc(100vw - 28px));
+  display: flex;
+  gap: 8px;
+  padding: 0 2px 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  transform: translateX(-50%);
+}
+
+.neo-minimized-tray::-webkit-scrollbar { display: none; }
+.neo-minimized-tray[hidden] { display: none; }
+
+.neo-minimized-card {
+  width: 220px;
+  flex: 0 0 220px;
+  padding: 5px;
+  color: #fff;
+  background: rgba(12, 13, 15, 0.7);
+  border: 0;
+  border-radius: 7px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.26);
+  -webkit-backdrop-filter: blur(20px) saturate(1.22);
+  backdrop-filter: blur(20px) saturate(1.22);
+  animation: neo-minimized-card-in 150ms ease both;
+}
+
+.neo-minimized-card-header {
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.neo-minimized-card button {
+  color: inherit;
+  font: inherit;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.neo-minimized-card-identity {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 2px 4px;
+  text-align: left;
+}
+
+.neo-minimized-card-identity strong {
+  min-width: 0;
+  overflow: hidden;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.neo-minimized-card-icon {
+  width: 18px !important;
+  height: 18px !important;
+  flex: 0 0 18px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.neo-minimized-card-icon .app-image-icon,
+.neo-minimized-card-icon.app-image-icon { width: 100%; height: 100%; object-fit: contain; }
+
+.neo-minimized-card-controls { display: flex; gap: 1px; }
+
+.neo-minimized-card-controls > button {
+  position: relative;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border-radius: 4px;
+}
+
+.neo-minimized-card-controls > button:hover,
+.neo-minimized-card-controls > button:focus-visible { background: rgba(255, 255, 255, 0.13); }
+.neo-minimized-card-controls .icon { width: 13px; height: 13px; }
+.neo-minimized-card-mute.is-muted::after {
+  content: "";
+  position: absolute;
+  width: 15px;
+  height: 1px;
+  background: currentColor;
+  transform: rotate(-45deg);
+}
+
+.neo-minimized-card-open {
+  width: 100%;
+  display: block;
+  padding: 0;
+  overflow: hidden;
+  background: #090909 !important;
+  border-radius: 4px;
+}
+
+.neo-minimized-card-viewport {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 7;
+  display: block;
+  overflow: hidden;
+  background: #090909;
+}
+
+.neo-minimized-card-viewport .neo-taskbar-preview-fallback,
+.neo-minimized-card-viewport .neo-taskbar-preview-media { font-size: 12px; }
+.neo-minimized-card-viewport .neo-taskbar-preview-fallback-icon,
+.neo-minimized-card-viewport .neo-taskbar-preview-media-icon { width: 34px !important; height: 34px !important; }
+.neo-minimized-card-viewport .neo-taskbar-preview-fallback strong { font-size: 10px; }
+.neo-minimized-card-viewport .neo-taskbar-preview-fallback small,
+.neo-minimized-card-viewport .neo-taskbar-preview-media > span { font-size: 8px; }
+
+@keyframes neo-minimized-card-in {
+  from { opacity: 0; transform: translateY(-5px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 @media (hover: none), (pointer: coarse), (max-width: 640px) {
   .neo-taskbar-preview { display: none !important; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .neo-taskbar-preview { transition: none; }
+  .neo-minimized-card { animation: none; }
 }

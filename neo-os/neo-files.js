@@ -16,11 +16,12 @@
   var mounts = new Set();
 
   var defaultFolders = [
-    { id: "folder-downloads", name: "Downloads", icon: "download", order: 1 },
+    { id: "folder-desktop", name: "Desktop", icon: "monitor", order: 1 },
     { id: "folder-documents", name: "Documents", icon: "file", order: 2 },
-    { id: "folder-pictures", name: "Pictures", icon: "image", order: 3 },
-    { id: "folder-music", name: "Music", icon: "music", order: 4 },
-    { id: "folder-videos", name: "Videos", icon: "film", order: 5 }
+    { id: "folder-downloads", name: "Downloads", icon: "download", order: 3 },
+    { id: "folder-pictures", name: "Pictures", icon: "image", order: 4 },
+    { id: "folder-music", name: "Music", icon: "music", order: 5 },
+    { id: "folder-videos", name: "Videos", icon: "film", order: 6 }
   ];
   var protectedFolderIds = new Set(defaultFolders.map(function (folder) { return folder.id; }));
 
@@ -310,15 +311,15 @@
     return [
       '<section class="neo-files" data-files-app>',
       '  <header class="files-commandbar">',
-      '    <div class="files-brand"><img src="./assets/google-drive.svg?v=20260824-drive-ui-v1" width="36" height="36" alt="" /><strong>Drive</strong></div>',
-      '    <label class="files-search">' + shell.icon("search") + '<span class="sr-only">Search in Drive</span><input type="search" data-files-search placeholder="Search in Drive" autocomplete="off" /></label>',
-      '    <div class="files-header-actions"><span data-files-storage>Checking storage</span></div>',
+      '    <div class="files-brand"><strong>File Explorer</strong></div>',
+      '    <label class="files-search">' + shell.icon("search") + '<span class="sr-only">Search files</span><input type="search" data-files-search placeholder="Search..." autocomplete="off" /></label>',
+      '    <div class="files-header-actions"><span data-files-storage>Checking storage</span><button type="button" data-files-import>' + shell.icon("plus") + '<span>File</span></button><button type="button" data-files-new-folder>' + shell.icon("plus") + '<span>Folder</span></button></div>',
       '  </header>',
       '  <div class="files-layout">',
       '    <aside class="files-sidebar" aria-label="Locations">',
       '      <details class="files-new" data-files-new-menu><summary>' + shell.icon("plus") + '<span>New</span></summary><div class="files-new-popover"><button type="button" data-files-new-folder>' + shell.icon("folder") + '<span>New folder</span></button><i></i><button type="button" data-files-import>' + shell.icon("upload") + '<span>File upload</span></button></div></details>',
       '      <nav class="files-locations">',
-      '        <button type="button" data-files-location="root">' + shell.icon("folder") + '<span>My Drive</span></button>',
+      '        <button type="button" data-files-location="root">' + shell.icon("folder") + '<span>Home</span></button>',
       defaultFolders.map(function (folder) { return '<button class="is-child" type="button" data-files-location="' + folder.id + '">' + shell.icon(folder.icon) + '<span>' + folder.name + '</span></button>'; }).join(""),
       '        <button type="button" data-files-location="trash">' + shell.icon("trash") + '<span>Trash</span><em data-files-trash-count></em></button>',
       '      </nav>',

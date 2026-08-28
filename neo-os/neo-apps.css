@@ -19,21 +19,36 @@
   shape-rendering: geometricPrecision;
 }
 
-.app-icon-cinehd {
+.app-icon-zstream,
+.app-icon-discord {
   overflow: hidden;
   color: transparent;
-  background: #050505 !important;
   border: 0;
   border-radius: 22%;
   box-shadow: none;
 }
 
-.app-icon-cinehd .cinehd-logo-mark {
+.app-icon-zstream {
+  background: #050505 !important;
+}
+
+.app-icon-discord {
+  background: #5865f2 !important;
+}
+
+.app-icon-zstream .app-image-icon,
+.app-icon-discord .app-image-icon {
   display: block;
   width: 100% !important;
   height: 100% !important;
-  background: #050505 url("./assets/cinehd.png?v=20260827-official-v1") left center / 490% 100% no-repeat !important;
+  object-fit: contain;
   border-radius: inherit;
+}
+
+.app-icon-discord .app-image-icon {
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0;
 }
 
 .window-app-icon.app-icon-stream,
@@ -468,6 +483,21 @@
 }
 
 .app-icon-google-drive .app-image-icon {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+}
+
+.app-icon-media-player {
+  overflow: visible !important;
+  color: transparent !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.app-icon-media-player .app-image-icon {
   width: 100% !important;
   height: 100% !important;
   object-fit: contain !important;
