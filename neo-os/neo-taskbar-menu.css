@@ -31,11 +31,11 @@
 
 .neo-taskbar-menu-app {
   display: grid;
-  grid-template-columns: 22px minmax(0, 1fr);
+  grid-template-columns: 30px minmax(0, 1fr);
   align-items: center;
-  min-height: 42px;
+  min-height: 46px;
   padding: 5px 12px;
-  column-gap: 11px;
+  column-gap: 12px;
 }
 
 .neo-taskbar-menu-app strong {
@@ -55,11 +55,20 @@
 .neo-taskbar-menu-app-icon .dock-app-art,
 .neo-taskbar-menu-app-icon .app-image-icon {
   display: grid;
-  width: 22px;
-  height: 22px;
-  flex: 0 0 22px;
+  width: 30px !important;
+  height: 30px !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-width: 30px !important;
+  max-height: 30px !important;
+  flex: 0 0 30px;
   place-items: center;
   object-fit: contain;
+}
+
+.neo-taskbar-menu-app-icon {
+  overflow: hidden;
+  justify-self: center;
 }
 
 .neo-taskbar-menu-app-icon .dock-app-art {
@@ -67,8 +76,8 @@
 }
 
 .neo-taskbar-menu-app-icon .icon {
-  width: 15px;
-  height: 15px;
+  width: 19px;
+  height: 19px;
 }
 
 .neo-taskbar-menu-separator {

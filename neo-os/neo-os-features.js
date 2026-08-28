@@ -762,6 +762,20 @@
     updateNowPlaying();
   }
 
+  function stopMusic() {
+    try { audio.pause(); } catch (error) {}
+    try { audio.currentTime = 0; } catch (error) {}
+    try { audio.removeAttribute("src"); } catch (error) {}
+    try { audio.load(); } catch (error) {}
+    if (currentTrackUrl) {
+      try { URL.revokeObjectURL(currentTrackUrl); } catch (error) {}
+    }
+    currentTrackUrl = "";
+    currentTrackId = "";
+    lastNowPlayingSecond = -1;
+    try { updateNowPlaying(); } catch (error) {}
+  }
+
   function savePlaylists() {
     writeJson(PLAYLIST_KEY, playlists);
   }
@@ -1826,6 +1840,7 @@
     mount: mount,
     transport: transport,
     setVolume: setVolume,
+    stopMusic: stopMusic,
     toggleNotifications: toggleNotifications,
     openDesktopMenu: openDesktopMenu,
     closeOverlays: closeOverlays,

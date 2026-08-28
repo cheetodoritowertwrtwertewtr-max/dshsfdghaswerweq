@@ -126,6 +126,7 @@ body {
   display: block !important;
   background: rgba(3, 5, 8, 0.56) !important;
   border: 0 !important;
+  outline: 0 !important;
   -webkit-backdrop-filter: blur(14px) saturate(0.78) !important;
   backdrop-filter: blur(14px) saturate(0.78) !important;
 }
@@ -145,6 +146,7 @@ body {
   overflow: hidden !important;
   background: transparent !important;
   border: 0 !important;
+  outline: 0 !important;
   border-radius: 0 !important;
   box-shadow: none !important;
   pointer-events: none;
@@ -192,6 +194,8 @@ body {
   align-content: center !important;
   padding: 24px clamp(24px, 7vw, 120px) 64px !important;
   overflow: auto !important;
+  border: 0 !important;
+  outline: 0 !important;
   pointer-events: auto;
 }
 

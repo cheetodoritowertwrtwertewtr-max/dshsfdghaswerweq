@@ -5,14 +5,14 @@
 @media (min-width: 761px) {
   .neo-window:not(.is-tab-fullscreen) {
     max-width: calc(100vw - 14px);
-    max-height: calc(100vh - 106px);
-    max-height: calc(100dvh - 106px);
+    max-height: calc(100vh - var(--topbar-height, 30px));
+    max-height: calc(100dvh - var(--topbar-height, 30px));
   }
 }
 
 .window-resize-handle {
   position: absolute;
-  z-index: 20;
+  z-index: 40;
   display: block;
   padding: 0;
   background: transparent;
@@ -21,11 +21,16 @@
   user-select: none;
 }
 
+.neo-window > .window-chrome > .window-controls {
+  position: relative;
+  z-index: 50;
+}
+
 .window-resize-handle[data-window-resize="n"],
 .window-resize-handle[data-window-resize="s"] {
-  right: 12px;
-  left: 12px;
-  height: 7px;
+  right: 18px;
+  left: 18px;
+  height: 12px;
   cursor: ns-resize;
 }
 
@@ -34,9 +39,9 @@
 
 .window-resize-handle[data-window-resize="e"],
 .window-resize-handle[data-window-resize="w"] {
-  top: 12px;
-  bottom: 12px;
-  width: 7px;
+  top: 18px;
+  bottom: 18px;
+  width: 12px;
   cursor: ew-resize;
 }
 
@@ -47,11 +52,17 @@
 .window-resize-handle[data-window-resize="nw"],
 .window-resize-handle[data-window-resize="se"],
 .window-resize-handle[data-window-resize="sw"] {
-  width: 13px;
-  height: 13px;
+  width: 22px;
+  height: 22px;
 }
 
-.window-resize-handle[data-window-resize="ne"] { top: 0; right: 0; cursor: nesw-resize; }
+.window-resize-handle[data-window-resize="ne"] {
+  top: -4px;
+  right: -4px;
+  width: 12px;
+  height: 12px;
+  cursor: nesw-resize;
+}
 .window-resize-handle[data-window-resize="nw"] { top: 0; left: 0; cursor: nwse-resize; }
 .window-resize-handle[data-window-resize="se"] { right: 0; bottom: 0; cursor: nwse-resize; }
 .window-resize-handle[data-window-resize="sw"] { bottom: 0; left: 0; cursor: nesw-resize; }

@@ -255,6 +255,22 @@
       broadcast();
     }
 
+    function stop() {
+      window.clearTimeout(sleepTimer);
+      sleepTimer = 0;
+      sleepAt = 0;
+      wantsPlayback = false;
+      failures = 0;
+      try { audio.pause(); } catch (error) {}
+      try { audio.currentTime = 0; } catch (error) {}
+      try { audio.removeAttribute("src"); } catch (error) {}
+      try { audio.load(); } catch (error) {}
+      queue = [];
+      index = -1;
+      shuffle = false;
+      try { broadcast(); } catch (error) {}
+    }
+
     ["play", "pause", "playing", "loadedmetadata", "durationchange", "timeupdate", "volumechange", "ratechange"].forEach(function (name) {
       audio.addEventListener(name, broadcast);
     });
@@ -273,7 +289,7 @@
       try { navigator.mediaSession.setActionHandler("nexttrack", next); } catch (error) {}
       try { navigator.mediaSession.setActionHandler("previoustrack", previous); } catch (error) {}
     }
-    return { audio: audio, broadcast: broadcast };
+    return { audio: audio, broadcast: broadcast, stop: stop };
   }
 
   function createShell(app, body, iconMarkup) {
@@ -364,7 +380,9 @@
 
   function cacheWindow(win, id, openWindows, app, forceDestroy, renderDock, activateTopWindow) {
     if (!win || !id || forceDestroy === true || !app || !app.keepAlive || app.installed === false) return false;
-    if (document.activeElement && win.contains(document.activeElement)) document.activeElement.blur();
+    try {
+      if (document.activeElement && win.contains(document.activeElement)) document.activeElement.blur();
+    } catch (error) {}
     window.clearTimeout(win._neoCloseTimer);
     win.classList.add("is-closing");
     win.classList.remove("is-open", "is-active", "is-minimized");
@@ -377,9 +395,23 @@
       win.hidden = true;
       win.classList.remove("is-closing");
     }, 180);
-    renderDock();
-    activateTopWindow();
+    try { renderDock(); } catch (error) {}
+    try { activateTopWindow(); } catch (error) {}
     return true;
+  }
+
+  function stopWindow(win, id) {
+    if (!win || id !== "stream") return false;
+    var stopped = false;
+    win.querySelectorAll(".music-direct-session").forEach(function (session) {
+      var playback = session._neoPlayback;
+      if (!playback || typeof playback.stop !== "function") return;
+      try {
+        playback.stop();
+        stopped = true;
+      } catch (error) {}
+    });
+    return stopped;
   }
 
   function restoreWindow(id, openWindows, renderDock, activateWindow) {
@@ -409,6 +441,7 @@
   window.NEO_MUSIC_RUNTIME = {
     createShell: createShell,
     mountDirect: mountDirect,
+    stopWindow: stopWindow,
     cacheWindow: cacheWindow,
     restoreWindow: restoreWindow,
     getWindow: function (id, openWindows) { return openWindows.get(id) || cachedWindows.get(id) || null; },
