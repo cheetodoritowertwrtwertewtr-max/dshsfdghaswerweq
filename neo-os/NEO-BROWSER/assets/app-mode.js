@@ -1,6 +1,23 @@
 (() => {
   "use strict";
 
+  const setMuted = (muted) => {
+    document.querySelectorAll("audio, video").forEach((media) => {
+      media.muted = muted;
+    });
+    const frame = document.getElementById("frame");
+    if (!frame || !frame.contentWindow) return;
+    try {
+      frame.contentWindow.postMessage({ type: "neo-shell:set-muted", muted }, "*");
+    } catch {}
+  };
+
+  window.addEventListener("message", (event) => {
+    if (event.source !== window.parent || event.origin !== window.location.origin) return;
+    if (!event.data || event.data.type !== "neo-shell:set-muted") return;
+    setMuted(Boolean(event.data.muted));
+  });
+
   const params = new URLSearchParams(window.location.search);
   if (params.get("neo-app-mode") !== "1") return;
 

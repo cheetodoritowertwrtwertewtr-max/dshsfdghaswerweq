@@ -1308,7 +1308,7 @@
         document.head.appendChild(style);
       }
       var script = document.createElement("script");
-      script.src = "./neo-os-features.js?v=20260828-close-stop-v2";
+      script.src = "./neo-os-features.js?v=20260828-minimized-mute-v3";
       script.async = true;
       script.onload = function () {
         if (!window.NEO_FEATURES) {

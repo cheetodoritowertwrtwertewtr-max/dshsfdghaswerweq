@@ -55,6 +55,7 @@
         time: audio.currentTime || 0,
         duration: audio.duration || 0,
         volume: audio.volume,
+        muted: audio.muted,
         shuffle: shuffle,
         loop: audio.loop,
         radio: true,
@@ -414,6 +415,21 @@
     return stopped;
   }
 
+  function setWindowMuted(win, muted) {
+    if (!win) return false;
+    var changed = false;
+    win.querySelectorAll(".music-direct-session").forEach(function (session) {
+      var playback = session._neoPlayback;
+      if (!playback || !playback.audio) return;
+      try {
+        playback.audio.muted = Boolean(muted);
+        if (typeof playback.broadcast === "function") playback.broadcast();
+        changed = true;
+      } catch (error) {}
+    });
+    return changed;
+  }
+
   function restoreWindow(id, openWindows, renderDock, activateWindow) {
     var win = cachedWindows.get(id);
     if (!win) return null;
@@ -442,6 +458,7 @@
     createShell: createShell,
     mountDirect: mountDirect,
     stopWindow: stopWindow,
+    setWindowMuted: setWindowMuted,
     cacheWindow: cacheWindow,
     restoreWindow: restoreWindow,
     getWindow: function (id, openWindows) { return openWindows.get(id) || cachedWindows.get(id) || null; },

@@ -762,6 +762,12 @@
     updateNowPlaying();
   }
 
+  function setMuted(value) {
+    audio.muted = Boolean(value);
+    updateNowPlaying();
+    return audio.muted;
+  }
+
   function stopMusic() {
     try { audio.pause(); } catch (error) {}
     try { audio.currentTime = 0; } catch (error) {}
@@ -1840,6 +1846,7 @@
     mount: mount,
     transport: transport,
     setVolume: setVolume,
+    setMuted: setMuted,
     stopMusic: stopMusic,
     toggleNotifications: toggleNotifications,
     openDesktopMenu: openDesktopMenu,

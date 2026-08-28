@@ -162,8 +162,18 @@
 
   function setWindowMuted(win, muted) {
     if (!win) return;
+    muted = Boolean(muted);
     win.dataset.neoMuted = muted ? "true" : "false";
     win.querySelectorAll("audio, video").forEach(function (media) { media.muted = muted; });
+    var appId = String(win.dataset.appId || "");
+    if (appId === "stream") {
+      if (window.NEO_MUSIC_RUNTIME && typeof window.NEO_MUSIC_RUNTIME.setWindowMuted === "function") {
+        window.NEO_MUSIC_RUNTIME.setWindowMuted(win, muted);
+      }
+      if (window.NEO_FEATURES && typeof window.NEO_FEATURES.setMuted === "function") {
+        window.NEO_FEATURES.setMuted(muted);
+      }
+    }
     win.querySelectorAll("iframe").forEach(function (frame) {
       try {
         frame.contentWindow.postMessage({ type: "neo-shell:set-muted", muted: muted }, window.location.origin);
