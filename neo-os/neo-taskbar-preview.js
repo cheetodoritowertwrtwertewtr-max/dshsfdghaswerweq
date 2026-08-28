@@ -30,6 +30,16 @@
     return icon ? icon.cloneNode(true) : document.createElement("span");
   }
 
+  function fullscreenActive() {
+    var root = document.documentElement;
+    return Boolean(
+      document.fullscreenElement ||
+      document.webkitFullscreenElement ||
+      root.hasAttribute("data-tab-fullscreen") ||
+      root.dataset.fullscreen === "true"
+    );
+  }
+
   function dockButton(id) {
     if (!api || !api.dock) return null;
     return Array.from(api.dock.querySelectorAll(".dock-button[data-app]")).find(function (button) {
@@ -225,6 +235,10 @@
 
   function refreshMinimizedTray() {
     if (!minimizedTray || !api) return;
+    if (fullscreenActive()) {
+      minimizedTray.hidden = true;
+      return;
+    }
     minimizedTray.textContent = "";
     var minimized = [];
     api.windows.forEach(function (win, id) {
@@ -291,6 +305,10 @@
 
   function show(button) {
     if (!api || !button || !button.isConnected) return;
+    if (fullscreenActive()) {
+      hideNow();
+      return;
+    }
     var id = button.dataset.app;
     var win = api.windows.get(id);
     if (!win) {
@@ -353,6 +371,15 @@
     return node;
   }
 
+  function syncFullscreenVisibility() {
+    if (fullscreenActive()) {
+      hideNow();
+      if (minimizedTray) minimizedTray.hidden = true;
+      return;
+    }
+    refreshMinimizedTray();
+  }
+
   function bindDock() {
     api.dock.addEventListener("pointerover", function (event) {
       if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
@@ -394,6 +421,12 @@
     bindDock();
     window.addEventListener("resize", function () { if (anchor) positionPreview(anchor); }, { passive: true });
     window.addEventListener("blur", hideNow);
+    document.addEventListener("fullscreenchange", syncFullscreenVisibility);
+    document.addEventListener("webkitfullscreenchange", syncFullscreenVisibility);
+    new MutationObserver(syncFullscreenVisibility).observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-tab-fullscreen", "data-fullscreen"]
+    });
     document.addEventListener("keydown", function (event) { if (event.key === "Escape" && activeId) hideNow(); });
     document.addEventListener("pointerdown", function (event) {
       if (activeId && !preview.contains(event.target) && !event.target.closest(".dock-button[data-app]")) hideNow();

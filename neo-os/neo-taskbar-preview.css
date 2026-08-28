@@ -179,6 +179,16 @@
 .neo-minimized-tray::-webkit-scrollbar { display: none; }
 .neo-minimized-tray[hidden] { display: none; }
 
+html.has-tab-fullscreen .neo-taskbar-preview,
+html.has-tab-fullscreen .neo-minimized-tray,
+html[data-tab-fullscreen] .neo-taskbar-preview,
+html[data-tab-fullscreen] .neo-minimized-tray,
+html[data-fullscreen="true"] .neo-taskbar-preview,
+html[data-fullscreen="true"] .neo-minimized-tray {
+  display: none !important;
+  pointer-events: none !important;
+}
+
 .neo-minimized-card {
   width: 220px;
   flex: 0 0 220px;
