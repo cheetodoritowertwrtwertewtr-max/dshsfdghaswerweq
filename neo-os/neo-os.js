@@ -2696,6 +2696,57 @@
 
     var timeout = 0;
     var hostWindow = body.closest(".neo-window");
+    function handleEmbeddedMediaState(event) {
+      if (event.source !== frame.contentWindow) return;
+      var data = event.data;
+      if (!data || typeof data !== "object") return;
+      if (data.type === "neo-shell:video-route") {
+        if (data.active === true) pauseMusicForVideoFocus();
+        window.dispatchEvent(new CustomEvent("neo-media-priority", {
+          detail: {
+            source: "route-focus:" + app.id,
+            active: data.active === true,
+            kind: "video",
+            pauseWallpaper: true
+          }
+        }));
+        return;
+      }
+      if (data.type !== "neo-shell:media-state") return;
+      var videoRoute = app.id === "youtube-app" || app.id === "browser";
+      window.dispatchEvent(new CustomEvent("neo-media-state", {
+        detail: {
+          source: "route-media:" + app.id,
+          appId: app.id,
+          active: data.active === true,
+          playing: data.playing === true,
+          muted: data.muted === true,
+          kind: videoRoute ? "video" : "media",
+          pauseWallpaper: videoRoute
+        }
+      }));
+    }
+    function clearEmbeddedMediaState() {
+      window.dispatchEvent(new CustomEvent("neo-media-priority", {
+        detail: {
+          source: "route-focus:" + app.id,
+          active: false,
+          kind: "video",
+          pauseWallpaper: true
+        }
+      }));
+      window.dispatchEvent(new CustomEvent("neo-media-state", {
+        detail: {
+          source: "route-media:" + app.id,
+          appId: app.id,
+          active: false,
+          playing: false,
+          muted: false,
+          kind: "video",
+          pauseWallpaper: true
+        }
+      }));
+    }
     function relayNeoBrowserMessage(event) {
       if (app.id !== "browser" || event.source === frame.contentWindow) return;
       var data = event.data;
@@ -2706,12 +2757,13 @@
         // Ignore messages sent while the browser frame is being replaced.
       }
     }
-    if (app.id === "browser") {
-      window.addEventListener("message", relayNeoBrowserMessage);
-      if (hostWindow) hostWindow._neoExtraCleanup = function () {
-        window.removeEventListener("message", relayNeoBrowserMessage);
-      };
-    }
+    window.addEventListener("message", handleEmbeddedMediaState);
+    if (app.id === "browser") window.addEventListener("message", relayNeoBrowserMessage);
+    if (hostWindow) hostWindow._neoExtraCleanup = function () {
+      window.removeEventListener("message", handleEmbeddedMediaState);
+      if (app.id === "browser") window.removeEventListener("message", relayNeoBrowserMessage);
+      clearEmbeddedMediaState();
+    };
     function applyHostIntegration() {
       if (app.id !== "browser") return;
       try {
@@ -2765,6 +2817,7 @@
       showToast("App not available", app.title + " is not available on this device.", "apps");
       return null;
     }
+    if (id === "youtube-app") pauseMusicForVideoFocus();
     setLauncherOpen(false);
     if (app.launcher) recordRecentApp(id);
     var existing = openWindows.get(id);
@@ -2862,6 +2915,13 @@
       try { renderNowPlaying({ source: nowPlayingState.source, active: false }); } catch (error) {}
     }
     try { renderNowPlaying({ source: "browse-media:stream", active: false }); } catch (error) {}
+  }
+
+  function pauseMusicForVideoFocus() {
+    if (!musicRuntime || typeof musicRuntime.pauseWindow !== "function") return false;
+    var musicWindow = musicRuntime.getWindow("stream", openWindows);
+    if (!musicWindow) return false;
+    try { return musicRuntime.pauseWindow(musicWindow, "stream"); } catch (error) { return false; }
   }
 
   function closeWindow(win, forceDestroy) {
@@ -4644,6 +4704,8 @@
     window.addEventListener("neo-media-state", function (event) {
       var detail = event.detail || {};
       var source = "play:" + String(detail.source || "media");
+      var isPlayingVideo = detail.active !== false && detail.playing === true && detail.kind === "video";
+      if (isPlayingVideo) pauseMusicForVideoFocus();
       var shouldPrioritize = detail.active !== false
         && detail.playing === true
         && (detail.kind === "video" || detail.pauseWallpaper === true);
@@ -4652,6 +4714,7 @@
       if (window.NEOWallpaperEngine && window.NEOWallpaperEngine.setMediaPriority) {
         window.NEOWallpaperEngine.setMediaPriority(mediaPrioritySources.size > 0);
       }
+      if (detail.appId === "stream" && detail.playing === true && mediaPrioritySources.size > 0 && pauseMusicForVideoFocus()) return;
       renderNowPlaying(detail);
     });
     window.addEventListener("neo-media-priority", function (event) {
