@@ -63,7 +63,7 @@
   var shellApi = null;
 
   var defaultSettings = {
-    designVersion: 12,
+    designVersion: 13,
     wallpaper: "we-steam-1403160205",
     wallpaperFavorites: [],
     wallpaperRecent: [],
@@ -112,7 +112,10 @@
   if (savedDesignVersion < 12 && (!savedSettings.wallpaper || savedSettings.wallpaper === "neo")) {
     savedSettings.wallpaper = "we-steam-1403160205";
   }
-  savedSettings.designVersion = 12;
+  if (savedDesignVersion < 13 && savedSettings.wallpaper === "we-steam-3192588052") {
+    savedSettings.wallpaper = "we-steam-1403160205";
+  }
+  savedSettings.designVersion = 13;
   var settings = Object.assign({}, defaultSettings, savedSettings);
   settings.wallpaperMuted = true;
   settings.wallpaperPaused = false;
@@ -129,6 +132,7 @@
       subtitle: "Private DuckDuckGo search",
       icon: "duckduckgo",
       route: "./NEO-BROWSER/index.html",
+      keepAlive: true,
       width: 1080,
       height: 720,
       launcher: true,
@@ -292,6 +296,11 @@
       if (apps[id].launcher) apps[id].pinned = storedPinnedApps.indexOf(id) !== -1;
     });
   }
+  var pinnedAppOrder = (Array.isArray(storedPinnedApps) ? storedPinnedApps : Object.keys(apps).filter(function (id) {
+    return apps[id].launcher && apps[id].pinned;
+  })).filter(function (id, index, ids) {
+    return ids.indexOf(id) === index && apps[id] && apps[id].launcher;
+  });
 
   function readJson(key, fallback) {
     try {
@@ -328,7 +337,8 @@
       "media-player": "./assets/media-player.svg?v=20260827-high-resolution-v1",
       "html-games": "./assets/html-games.svg?v=20260827-blue-controller-v1",
       zstream: "./assets/zstream.png?v=20260827-zstream-official-v1",
-      discord: "./assets/discord-official.png?v=20260827-user-artwork-v1"
+      discord: "./assets/discord-official.png?v=20260828-user-artwork-v2",
+      youtube: "./assets/youtube.svg?v=20260828-youtube-v1"
     };
     if (imageIcons[name]) return '<img class="app-image-icon" src="' + imageIcons[name] + '" width="24" height="24" alt="">';
     return '<svg class="icon" aria-hidden="true"><use href="#i-' + name + '"></use></svg>';
@@ -859,6 +869,7 @@
     button.className = "dock-button";
     button.type = "button";
     button.dataset.app = app.id;
+    button.draggable = true;
     var accessibleName = appAccessibleName(app);
     if (!app.hideName) button.dataset.tooltip = app.title;
     button.setAttribute("aria-label", (minimized ? "Restore " : (win ? "Switch to " : "Open ")) + accessibleName);
@@ -875,18 +886,103 @@
     var dock = document.getElementById("neo-dock");
     if (!dock) return;
     var visible = new Map();
-    launcherApps().forEach(function (app) { if (app.pinned) visible.set(app.id, app); });
+    normalizePinnedAppOrder().forEach(function (id) {
+      if (apps[id] && apps[id].installed && apps[id].pinned) visible.set(id, apps[id]);
+    });
     openWindows.forEach(function (_, id) { if (apps[id]) visible.set(id, apps[id]); });
     dock.textContent = "";
     visible.forEach(function (app) { dock.appendChild(createDockButton(app)); });
+  }
+
+  function normalizePinnedAppOrder() {
+    var next = [];
+    pinnedAppOrder.forEach(function (id) {
+      if (apps[id] && apps[id].launcher && apps[id].installed && apps[id].pinned && next.indexOf(id) === -1) next.push(id);
+    });
+    launcherApps().forEach(function (app) {
+      if (app.pinned && next.indexOf(app.id) === -1) next.push(app.id);
+    });
+    pinnedAppOrder = next;
+    return next.slice();
+  }
+
+  function savePinnedAppOrder() {
+    writeJson(PINNED_APPS_KEY, normalizePinnedAppOrder());
+  }
+
+  function reorderDockApp(sourceId, targetId, placeAfter) {
+    var source = apps[sourceId];
+    if (!source || !source.launcher || !source.installed || sourceId === targetId) return;
+    source.pinned = true;
+    var order = normalizePinnedAppOrder().filter(function (id) { return id !== sourceId; });
+    var targetIndex = order.indexOf(targetId);
+    if (targetIndex === -1) order.push(sourceId);
+    else order.splice(targetIndex + (placeAfter ? 1 : 0), 0, sourceId);
+    pinnedAppOrder = order;
+    savePinnedAppOrder();
+    renderDock();
+    renderLauncher();
+  }
+
+  function enableDockReordering() {
+    var dock = document.getElementById("neo-dock");
+    if (!dock || dock.dataset.reorderReady === "true") return;
+    dock.dataset.reorderReady = "true";
+    var draggedId = "";
+    var dropTarget = null;
+
+    function clearDropState() {
+      dock.querySelectorAll(".is-dragging, .is-drop-before, .is-drop-after").forEach(function (button) {
+        button.classList.remove("is-dragging", "is-drop-before", "is-drop-after");
+      });
+      dropTarget = null;
+    }
+
+    dock.addEventListener("dragstart", function (event) {
+      var button = event.target.closest(".dock-button[data-app]");
+      if (!button) return;
+      draggedId = button.dataset.app;
+      button.classList.add("is-dragging");
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", draggedId);
+    });
+
+    dock.addEventListener("dragover", function (event) {
+      if (!draggedId) return;
+      var button = event.target.closest(".dock-button[data-app]");
+      if (!button || button.dataset.app === draggedId) return;
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "move";
+      if (dropTarget && dropTarget !== button) dropTarget.classList.remove("is-drop-before", "is-drop-after");
+      dropTarget = button;
+      var rect = button.getBoundingClientRect();
+      var vertical = getComputedStyle(dock).flexDirection === "column";
+      var placeAfter = vertical ? event.clientY >= rect.top + rect.height / 2 : event.clientX >= rect.left + rect.width / 2;
+      button.classList.toggle("is-drop-before", !placeAfter);
+      button.classList.toggle("is-drop-after", placeAfter);
+    });
+
+    dock.addEventListener("drop", function (event) {
+      if (!draggedId || !dropTarget) return;
+      event.preventDefault();
+      reorderDockApp(draggedId, dropTarget.dataset.app, dropTarget.classList.contains("is-drop-after"));
+      draggedId = "";
+      clearDropState();
+    });
+
+    dock.addEventListener("dragend", function () {
+      draggedId = "";
+      clearDropState();
+    });
   }
 
   function setAppPinned(id, pinned) {
     var app = apps[id];
     if (!app || !app.launcher || !app.installed) return false;
     app.pinned = Boolean(pinned);
-    var ids = launcherApps().filter(function (item) { return item.pinned; }).map(function (item) { return item.id; });
-    writeJson(PINNED_APPS_KEY, ids);
+    pinnedAppOrder = pinnedAppOrder.filter(function (itemId) { return itemId !== id; });
+    if (app.pinned) pinnedAppOrder.push(id);
+    savePinnedAppOrder();
     renderDock();
     renderLauncher();
     return app.pinned;
@@ -904,12 +1000,14 @@
     else installedAppIds.delete(id);
     if (!app.installed) {
       app.pinned = false;
+      pinnedAppOrder = pinnedAppOrder.filter(function (itemId) { return itemId !== id; });
       var open = musicRuntime.getWindow(id, openWindows);
       if (open) closeWindow(open, true);
     }
     writeJson(INSTALLED_APPS_KEY, Array.from(installedAppIds));
-    writeJson(PINNED_APPS_KEY, launcherApps().filter(function (item) { return item.pinned; }).map(function (item) { return item.id; }));
+    savePinnedAppOrder();
     renderDock();
+    enableDockReordering();
     renderLauncher();
     return app.installed;
   }
@@ -1171,6 +1269,13 @@
     windowTitle.hidden = app.hideName === true;
     windowTitle.querySelector("strong").textContent = appDisplayTitle(app);
     windowTitle.querySelector("small").textContent = app.subtitle || "NEO OS app";
+    win.querySelectorAll('[data-window-action]:not([data-window-action="fullscreen"])').forEach(function (button) {
+      button.addEventListener("click", function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        handleWindowAction(button);
+      });
+    });
     var body = win.querySelector(".window-body");
     if (app.id === "stream") mountUnifiedMusic(app, body);
     else if (app.lazy) mountLazyApp(app, body);
@@ -1202,7 +1307,7 @@
         document.head.appendChild(style);
       }
       var script = document.createElement("script");
-      script.src = "./neo-os-features.js?v=20260826-playlist-actions-v1";
+      script.src = "./neo-os-features.js?v=20260828-close-stop-v2";
       script.async = true;
       script.onload = function () {
         if (!window.NEO_FEATURES) {
@@ -2659,32 +2764,60 @@
     }
   }
 
+  function stopWindowMedia(win, id) {
+    if (id !== "stream") return;
+    if (musicRuntime && typeof musicRuntime.stopWindow === "function") {
+      try { musicRuntime.stopWindow(win, id); } catch (error) {}
+    }
+    if (window.NEO_FEATURES && typeof window.NEO_FEATURES.stopMusic === "function") {
+      try { window.NEO_FEATURES.stopMusic(); } catch (error) {}
+    } else if (featureRuntimePromise) {
+      featureRuntimePromise.then(function (runtime) {
+        if (runtime && typeof runtime.stopMusic === "function") {
+          try { runtime.stopMusic(); } catch (error) {}
+        }
+      }).catch(function () {});
+    }
+    if (nowPlayingState && nowPlayingState.appId === "stream") {
+      try { renderNowPlaying({ source: nowPlayingState.source, active: false }); } catch (error) {}
+    }
+    try { renderNowPlaying({ source: "browse-media:stream", active: false }); } catch (error) {}
+  }
+
   function closeWindow(win, forceDestroy) {
     if (!win) return;
     var id = win.dataset.appId;
     var app = apps[id];
-    window.dispatchEvent(new CustomEvent("neo-window-state-change", {
-      detail: { id: id || "", minimized: false, closed: true }
-    }));
-    if (!win.hidden) saveWindowState(win);
-    if (musicRuntime.cacheWindow(win, id, openWindows, app, forceDestroy, renderDock, activateTopWindow)) return;
-    if (id === "stream") renderNowPlaying({ source: "browse-media:stream", active: false });
-    musicRuntime.dropWindow(id);
+    try {
+      window.dispatchEvent(new CustomEvent("neo-window-state-change", {
+        detail: { id: id || "", minimized: false, closed: true }
+      }));
+    } catch (error) {}
+    try { if (!win.hidden) saveWindowState(win); } catch (error) {}
+    try { stopWindowMedia(win, id); } catch (error) {}
+    var cached = false;
+    try {
+      cached = Boolean(musicRuntime.cacheWindow(win, id, openWindows, app, forceDestroy, renderDock, activateTopWindow));
+    } catch (error) {}
+    if (cached) return;
+    try { musicRuntime.dropWindow(id); } catch (error) {}
     if (window.NEOFrameLoader) {
-      win.querySelectorAll("iframe").forEach(function (frame) { window.NEOFrameLoader.cancel(frame); });
+      win.querySelectorAll("iframe").forEach(function (frame) {
+        try { window.NEOFrameLoader.cancel(frame); } catch (error) {}
+      });
     }
-    if (win._neoResizeObserver) win._neoResizeObserver.disconnect();
-    if (typeof win._neoBrowserCleanup === "function") win._neoBrowserCleanup();
-    if (typeof win._neoMessagesCleanup === "function") win._neoMessagesCleanup();
-    if (typeof win._neoExtraCleanup === "function") win._neoExtraCleanup();
+    try { if (win._neoResizeObserver) win._neoResizeObserver.disconnect(); } catch (error) {}
+    try { if (typeof win._neoBrowserCleanup === "function") win._neoBrowserCleanup(); } catch (error) {}
+    try { if (typeof win._neoMessagesCleanup === "function") win._neoMessagesCleanup(); } catch (error) {}
+    try { if (typeof win._neoExtraCleanup === "function") win._neoExtraCleanup(); } catch (error) {}
     window.clearTimeout(win._neoResizeTimer);
     win.classList.add("is-closing");
     win.classList.remove("is-open", "is-active");
     window.setTimeout(function () {
       win.remove();
       openWindows.delete(id);
-      renderDock();
-      activateTopWindow();
+      try { renderDock(); } catch (error) {}
+      try { activateTopWindow(); } catch (error) {}
     }, 220);
   }
 
@@ -4464,6 +4597,11 @@
       setLauncherOpen(false);
     });
 
+    if (launcher) launcher.addEventListener("click", function (event) {
+      if (event.target.closest("[data-app], input, button, a, label, select, textarea, [role='button'], [role='option']")) return;
+      setLauncherOpen(false);
+    });
+
     if (launcher && launcherScroll) launcher.addEventListener("wheel", function (event) {
       if (event.ctrlKey || event.target.closest(".launcher-scroll-region")) return;
       var scale = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? launcherScroll.clientHeight : 1;
@@ -4772,6 +4910,7 @@
       });
     }
     renderDock();
+    enableDockReordering();
     if (window.NEO_TASKBAR_PREVIEW) window.NEO_TASKBAR_PREVIEW.start(document.getElementById("neo-dock"), openWindows, apps, openApp, closeWindow);
     renderLauncher();
     applySettings();

@@ -8,6 +8,11 @@
     <meta name="application-name" content="NEO BROWSER" />
     <meta name="theme-color" content="#000000" />
     <meta name="color-scheme" content="dark" />
+    <script>
+        if (new URLSearchParams(location.search).get("neo-app-mode") === "1") {
+            document.documentElement.classList.add("neo-app-mode");
+        }
+    </script>
     <style id="neo-critical">
         html, body { margin: 0; background: #000; color: #f7f7f7; color-scheme: dark; }
         .overlay.splash {
@@ -18,6 +23,13 @@
         #frame { background: #050505 !important; color-scheme: dark; }
         #frame:not([src]):not([srcdoc]),
         #frame[src="about:blank"]:not([srcdoc]) { opacity: 0 !important; }
+        html.neo-app-mode .titlebar,
+        html.neo-app-mode .navbar,
+        html.neo-app-mode .bookmarks-bar-wrap { display: none !important; }
+        html.neo-app-mode .app,
+        html.neo-app-mode main,
+        html.neo-app-mode .view,
+        html.neo-app-mode #frame { width: 100% !important; height: 100% !important; }
     </style>
     <meta name="apple-mobile-web-app-title" content="NEO BROWSER" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -27,7 +39,7 @@
     <link rel="icon" type="image/png" sizes="64x64" href="assets/neo-logo-64.png" />
     <link rel="apple-touch-icon" sizes="192x192" href="assets/neo-logo-192.png" />
     <link rel="manifest" href="manifest.webmanifest" />
-    <link rel="preload" href="assets/libcurl-0.7.4.wasm" as="fetch" type="application/wasm" crossorigin />
+    <link rel="modulepreload" href="curl/index.mjs" />
     <link rel="stylesheet" href="assets/vendor/fontawesome/css/all.min.css" />
     <!-- ES module stub: satisfies ECMAScript 6 Modules feature detection -->
     <script type="module">window._esModulesSupported = true;</script>
@@ -35,13 +47,14 @@
     <link rel="stylesheet" href="assets/neo.css">
     <link rel="stylesheet" href="assets/logo.css">
     <script src="assets/migrate.js" defer></script>
-    <script src="assets/libcurl-0.7.4.js" defer></script>
+    <script src="assets/libcurl-compat.js?v=20260828-one-transport-v1" defer></script>
     <script src="jet/jet.core.js" defer></script>
     <script src="jet/jet.api.js" defer></script>
     <script src="jet/jet.utils.js" defer></script>
-  <script src="assets/scramjet-runtime.js?v=20260827-chromeos-v1" defer></script>
+  <script src="assets/scramjet-runtime.js?v=20260828-controller-handoff-v3" defer></script>
   <script src="assets/app.js?v=20260827-jet-v4" defer></script>
     <script src="assets/neo.js" defer></script>
+    <script src="assets/app-mode.js?v=20260828-app-mode-v1" defer></script>
 </head>
 
 <body>

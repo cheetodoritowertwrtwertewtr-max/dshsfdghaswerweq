@@ -2,10 +2,11 @@
   "use strict";
 
   const pageBase = new URL("./", document.baseURI);
-  const serviceWorkerUrl = new URL("sw.js?v=20260827-chromeos-v1", pageBase);
+  const serviceWorkerUrl = new URL("sw.js?v=20260828-controller-handoff-v3", pageBase);
   const serviceWorkerScope = pageBase.pathname;
   const proxyBase = new URL("~/", pageBase).pathname;
-  const relayCacheKey = "neo:jet:last-relay:v1";
+  const relayCacheKey = "neo:jet:last-relay:v2";
+  const controllerReloadKey = "neo:jet:controller-reload:v3";
   const relayHosts = [
     "wss://girlspreples.org/wi/",
     "cdn.northstreetumc.org",
@@ -52,30 +53,27 @@
     return `wss://${relay}/adblock/`;
   }
 
-  function relayCandidates() {
-    // Start with the bundled endpoint that passes a complete HTTPS transfer.
-    // A stale cached endpoint is still considered, but cannot block startup.
-    const values = [relayHosts[0]];
+  function cachedRelay() {
     try {
-      values.push(localStorage.getItem("neo:wisp:last-working:v1"));
-      values.push(localStorage.getItem("neo:wisp:v1"));
-      values.push(localStorage.getItem(relayCacheKey));
-      for (let index = 0; index < localStorage.length; index += 1) {
-        const key = localStorage.key(index);
-        if (key?.endsWith(":neo:wisp:v1")) values.push(localStorage.getItem(key));
-      }
+      return normalizeRelay(localStorage.getItem(relayCacheKey));
     } catch {
-      // The bundled relay list remains available when storage is unavailable.
+      return "";
     }
-    values.push(...relayHosts.slice(1));
-    return [...new Set(values.map(normalizeRelay).filter(Boolean))];
   }
 
-  function probeRelay(url) {
+  function relayCandidates() {
+    return [...new Set(relayHosts.map(normalizeRelay).filter(Boolean))];
+  }
+
+  // Complete a tiny WISP protocol exchange. A plain WebSocket "open" event is
+  // not enough: overloaded relays often accept a socket but never carry data.
+  function probeRelay(url, timeoutMs = 3600) {
     return new Promise((resolve) => {
       let socket;
       let finished = false;
-      const startedAt = performance.now();
+      let openedStream = false;
+      let requestStartedAt = 0;
+      const streamId = crypto.getRandomValues(new Uint32Array(1))[0] || 1;
 
       const finish = (latency = null) => {
         if (finished) return;
@@ -85,17 +83,77 @@
         resolve(latency === null ? null : { url, latency });
       };
 
-      const timer = window.setTimeout(() => finish(), 2500);
+      const timer = window.setTimeout(() => finish(), timeoutMs);
       try {
         socket = new WebSocket(url);
+        socket.binaryType = "arraybuffer";
       } catch {
         finish();
         return;
       }
 
-      socket.onopen = () => finish(Math.max(1, Math.round(performance.now() - startedAt)));
+      socket.onmessage = async (event) => {
+        let data = event.data;
+        try {
+          if (data instanceof Blob) data = await data.arrayBuffer();
+          if (!(data instanceof ArrayBuffer) || data.byteLength < 5) return;
+          const view = new DataView(data);
+          const packetType = view.getUint8(0);
+          const packetStream = view.getUint32(1, true);
+
+          if (!openedStream) {
+            if (packetType === 5 && packetStream === 0) {
+              socket.send(new Uint8Array([5, 0, 0, 0, 0, 2, 1]));
+              return;
+            }
+            if (packetType !== 3 || packetStream !== 0) return;
+
+            openedStream = true;
+            const host = new TextEncoder().encode("127.0.0.1");
+            const packet = new ArrayBuffer(8 + host.length);
+            const request = new DataView(packet);
+            request.setUint8(0, 1);
+            request.setUint32(1, streamId, true);
+            request.setUint8(5, 1);
+            request.setUint16(6, 1, true);
+            new Uint8Array(packet).set(host, 8);
+            requestStartedAt = performance.now();
+            socket.send(packet);
+            return;
+          }
+
+          if (packetStream === streamId) {
+            finish(Math.max(1, Math.round(performance.now() - requestStartedAt)));
+          }
+        } catch {
+          finish();
+        }
+      };
       socket.onerror = () => finish();
       socket.onclose = () => finish();
+    });
+  }
+
+  function firstResponsiveRelay(candidates, timeoutMs) {
+    return new Promise((resolve) => {
+      if (!candidates.length) {
+        resolve(null);
+        return;
+      }
+      let settled = false;
+      let remaining = candidates.length;
+      candidates.forEach((relay) => {
+        probeRelay(relay, timeoutMs).then((result) => {
+          if (settled) return;
+          if (result) {
+            settled = true;
+            resolve(result);
+            return;
+          }
+          remaining -= 1;
+          if (!remaining) resolve(null);
+        });
+      });
     });
   }
 
@@ -110,6 +168,29 @@
         worker.state === expectedState ? resolve() : reject(new Error("The compatibility service was replaced."));
       };
       worker.addEventListener("statechange", onStateChange);
+    });
+  }
+
+  function isExpectedController(worker) {
+    return Boolean(worker && worker.scriptURL === serviceWorkerUrl.href);
+  }
+
+  function waitForExpectedController(timeout = 3000) {
+    const current = navigator.serviceWorker.controller;
+    if (isExpectedController(current)) return Promise.resolve(current);
+
+    return new Promise((resolve) => {
+      const finish = (worker = null) => {
+        window.clearTimeout(timer);
+        navigator.serviceWorker.removeEventListener("controllerchange", onControllerChange);
+        resolve(worker);
+      };
+      const onControllerChange = () => {
+        const next = navigator.serviceWorker.controller;
+        if (isExpectedController(next)) finish(next);
+      };
+      const timer = window.setTimeout(() => finish(null), timeout);
+      navigator.serviceWorker.addEventListener("controllerchange", onControllerChange);
     });
   }
 
@@ -130,13 +211,25 @@
     }
     await navigator.serviceWorker.ready;
 
-    const current = navigator.serviceWorker.controller;
-    if (current && current.scriptURL === serviceWorkerUrl.href) return current;
+    const activeWorker = registration.active;
+    if (activeWorker) activeWorker.postMessage({ type: "neo:jet:claim" });
+    const current = await waitForExpectedController();
+    if (current) {
+      sessionStorage.removeItem(controllerReloadKey);
+      return current;
+    }
 
-    // A page cannot safely swap an already-active proxy worker mid-request.
-    // Reload once so every tab is routed by this exact, versioned worker.
-    location.reload();
-    return new Promise(() => {});
+    // Chrome can activate a worker one navigation before it controls this
+    // iframe. Reload once, then fail clearly instead of sending a proxy URL to
+    // the static host and displaying its 404 response.
+    if (sessionStorage.getItem(controllerReloadKey) !== serviceWorkerUrl.href) {
+      sessionStorage.setItem(controllerReloadKey, serviceWorkerUrl.href);
+      location.reload();
+      return new Promise(() => {});
+    }
+
+    sessionStorage.removeItem(controllerReloadKey);
+    throw new Error("The secure browsing service could not control this page.");
   }
 
   function ensureServiceWorker() {
@@ -157,42 +250,19 @@
     throw new Error("The network transport did not initialize in time.");
   }
 
-  async function verifyTransport(instance) {
-    const abortController = new AbortController();
-    const timer = window.setTimeout(() => abortController.abort(), 6500);
-    try {
-      const response = await instance.request(
-        new URL("https://example.com/"),
-        "GET",
-        null,
-        [["accept", "text/html"]],
-        abortController.signal
-      );
-      if (!response || response.status < 200 || response.status >= 500) {
-        throw new Error(`Relay health request failed with status ${response?.status || 0}.`);
-      }
-      try { await response.body?.cancel(); } catch {}
-    } finally {
-      window.clearTimeout(timer);
-    }
-  }
-
   async function selectTransport(transportModule) {
-    for (const relay of relayCandidates()) {
-      const reachable = await probeRelay(relay);
-      if (!reachable) continue;
-      try {
-        const transport = new transportModule.default({ wisp: relay });
-        await initializeTransport(transport);
-        await verifyTransport(transport);
-        try { localStorage.setItem(relayCacheKey, relay); } catch {}
-        return transport;
-      } catch {
-        // A websocket handshake alone is not enough. ChromeOS must be able to
-        // complete a real HTTPS request before this endpoint can be selected.
-      }
+    const cached = cachedRelay();
+    let selected = cached ? await probeRelay(cached, 1400) : null;
+    if (!selected) {
+      const candidates = relayCandidates().filter((relay) => relay !== cached);
+      selected = await firstResponsiveRelay(candidates, 3800);
     }
-    throw new Error("No compatible relay is currently reachable.");
+    if (!selected) throw new Error("No compatible relay is currently reachable.");
+
+    const transport = new transportModule.default({ wisp: selected.url });
+    await initializeTransport(transport);
+    try { localStorage.setItem(relayCacheKey, selected.url); } catch {}
+    return transport;
   }
 
   async function initialize() {
@@ -290,6 +360,14 @@
     get active() { return active; },
   });
 
-  // Install and claim the transport before the first address-bar submission.
-  ensureServiceWorker().catch(() => {});
+  // Warm the transport as soon as the shell is interactive. The first search
+  // can then navigate immediately instead of paying setup cost on Enter.
+  const prewarm = () => initialize().catch((error) => {
+    window.dispatchEvent(new CustomEvent("neo:scramjet:error", { detail: { error } }));
+  });
+  if (document.readyState === "loading") {
+    window.addEventListener("DOMContentLoaded", () => window.setTimeout(prewarm, 0), { once: true });
+  } else {
+    window.setTimeout(prewarm, 0);
+  }
 })();

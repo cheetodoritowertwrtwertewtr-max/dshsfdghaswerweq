@@ -41,9 +41,7 @@
       title: "Discord",
       subtitle: "Messages, calls, and communities",
       icon: "discord",
-      template: "browser-template",
-      browserTarget: "https://discord.com/app",
-      browserChrome: false,
+      route: "./NEO-BROWSER/index.html?neo-app-mode=1&neo-app-target=https%3A%2F%2Fdiscord.com%2Fapp",
       keepAlive: true,
       width: 1180,
       height: 760,
@@ -51,6 +49,20 @@
       pinned: false,
       category: "Social",
       aliases: ["discord", "servers", "communities", "voice", "calls", "friends"]
+    },
+    "youtube-app": {
+      id: "youtube-app",
+      title: "YouTube",
+      subtitle: "Videos, channels, and subscriptions",
+      icon: "youtube",
+      route: "./NEO-BROWSER/index.html?neo-app-mode=1&neo-app-target=https%3A%2F%2Fwww.youtube.com%2F",
+      keepAlive: true,
+      width: 1180,
+      height: 760,
+      launcher: true,
+      pinned: false,
+      category: "Media",
+      aliases: ["youtube", "videos", "channels", "subscriptions", "shorts"]
     },
     "geometry-dash": {
       id: "geometry-dash",
@@ -179,6 +191,16 @@
         }
       });
       localStorage.setItem(retiredVideoMigrationKey, "1");
+    }
+
+    var youtubeAppMigrationKey = "neo_os_add_youtube_app_v2";
+    if (localStorage.getItem(youtubeAppMigrationKey) !== "1") {
+      var installedVideoApps = JSON.parse(localStorage.getItem("neo_os_installed_apps_v1") || "null");
+      if (Array.isArray(installedVideoApps) && installedVideoApps.indexOf("youtube-app") === -1) {
+        installedVideoApps.push("youtube-app");
+        localStorage.setItem("neo_os_installed_apps_v1", JSON.stringify(installedVideoApps));
+      }
+      localStorage.setItem(youtubeAppMigrationKey, "1");
     }
 
     var mergedMp3MigrationKey = "neo_os_merge_mp3_into_music_v1";

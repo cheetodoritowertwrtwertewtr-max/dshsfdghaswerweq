@@ -6,6 +6,7 @@
 
   var directions = ["n", "e", "s", "w", "ne", "nw", "se", "sw"];
   var active = null;
+  var resizeFrame = 0;
   var tabFullscreenWindow = null;
 
   function clamp(value, minimum, maximum) {
@@ -78,12 +79,25 @@
       y: event.clientY,
       rect: rect,
       bounds: layer.getBoundingClientRect(),
-      minimum: limits(win)
+      minimum: limits(win),
+      next: null
     };
     handle.setPointerCapture(event.pointerId);
     win.classList.add("is-resizing");
     document.documentElement.classList.add("is-resizing-window");
     event.preventDefault();
+  }
+
+  function paintResize() {
+    resizeFrame = 0;
+    if (!active || !active.next) return;
+    var next = active.next;
+    active.next = null;
+    active.win.style.left = Math.round(next.left - active.bounds.left) + "px";
+    active.win.style.top = Math.round(next.top - active.bounds.top) + "px";
+    active.win.style.width = Math.round(next.width) + "px";
+    active.win.style.height = Math.round(next.height) + "px";
+    updateAccessibleSize(active.handle, active.win);
   }
 
   function moveResize(event) {
@@ -110,15 +124,15 @@
       height = start.bottom - top;
     }
 
-    active.win.style.left = Math.round(left - bounds.left) + "px";
-    active.win.style.top = Math.round(top - bounds.top) + "px";
-    active.win.style.width = Math.round(width) + "px";
-    active.win.style.height = Math.round(height) + "px";
-    updateAccessibleSize(active.handle, active.win);
+    active.next = { left: left, top: top, width: width, height: height };
+    if (!resizeFrame) resizeFrame = requestAnimationFrame(paintResize);
   }
 
   function endResize(event) {
     if (!active || (event.pointerId != null && event.pointerId !== active.pointerId)) return;
+    if (resizeFrame) cancelAnimationFrame(resizeFrame);
+    resizeFrame = 0;
+    paintResize();
     if (active.handle.hasPointerCapture(active.pointerId)) active.handle.releasePointerCapture(active.pointerId);
     active.win.classList.remove("is-resizing");
     active.win.dispatchEvent(new CustomEvent("neo-window-resized"));
