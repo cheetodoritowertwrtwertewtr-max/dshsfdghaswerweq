@@ -1,6 +1,6 @@
 /* global Ultraviolet */
 (() => {
-  const engineVersion = "neo-browse-v66";
+  const engineVersion = "neo-browse-v67";
   const runtimeRoot = "/neo-os/browser-runtime";
   const emptyCssUrlMarker =
     "data:application/x-neo-browser-empty-url;base64,AA==";
@@ -14,7 +14,7 @@
   }
 
   self.__uv$config = {
-    prefix: "/neo-os/browse-v66/",
+    prefix: "/neo-os/browse-v67/",
     encodeUrl,
     decodeUrl,
     handler: `${runtimeRoot}/uv/uv.handler.js?engine=${engineVersion}`,

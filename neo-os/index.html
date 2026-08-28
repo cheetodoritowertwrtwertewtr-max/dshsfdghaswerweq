@@ -35,9 +35,9 @@
       (function () {
         window.__neoProxyRecovery = Promise.resolve();
         if (!("serviceWorker" in navigator)) return;
-        var expectedEngine = "neo-browse-v66";
+        var expectedEngine = "neo-browse-v67";
         var recoveryKey = "neo_proxy_scope_recovered_" + expectedEngine;
-        var expectedScope = new URL("./browse-v66/", document.baseURI).href;
+        var expectedScope = new URL("./browse-v67/", document.baseURI).href;
         window.__neoProxyRecovery = navigator.serviceWorker.getRegistrations().then(function (registrations) {
           var stale = registrations.filter(function (registration) {
             var workers = [registration.active, registration.waiting, registration.installing].filter(Boolean);
@@ -70,11 +70,18 @@
     <link rel="preload" href="./assets/fonts/anurati.otf" as="font" type="font/otf" crossorigin />
     <link rel="preconnect" href="https://vcsa.huangqirui.xyz" />
     <link rel="dns-prefetch" href="//vcsa.huangqirui.xyz" />
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+    <link rel="dns-prefetch" href="//cdn.jsdelivr.net" />
+    <link rel="preconnect" href="https://cinehd.vc" crossorigin />
+    <link rel="dns-prefetch" href="//cinehd.vc" />
+    <link rel="preconnect" href="https://web-dashers.github.io" crossorigin />
+    <link rel="dns-prefetch" href="//web-dashers.github.io" />
     <link rel="prefetch" href="./NEO-BROWSER/index.html" />
+    <link rel="prefetch" href="../games/web-dashers.html" />
     <link rel="stylesheet" href="./neo-os.css?v=20260826-compiler-window-layer-v2" />
     <link rel="stylesheet" href="./neo-taskbar-menu.css?v=20260825-alignment-v1" />
     <link rel="stylesheet" href="./neo-taskbar-preview.css?v=20260825-window-hover-v2" />
-    <link rel="stylesheet" href="./neo-apps.css?v=20260825-spotify-sharp-v1-icon-completion-v1-music-direct-v1" />
+    <link rel="stylesheet" href="./neo-apps.css?v=20260827-cinehd-official-v1" />
     <link rel="stylesheet" href="./neo-window-resize.css?v=20260815-stability-v1" />
     <link rel="stylesheet" href="./neo-wallpaper-engine.css?v=20260825-white-accents-v1" />
     <link rel="stylesheet" href="./neo-rainmeter.css?v=20260825-default-center-v1" />
@@ -267,7 +274,7 @@
           <button class="topbar-logo" type="button" data-open-launcher aria-label="Open apps">
             <img src="./assets/neo-logo.svg" width="28" height="28" alt="" />
           </button>
-          <button class="topbar-media" type="button" data-topbar-media data-app="stream" aria-label="Open Music" hidden>
+          <button class="topbar-media" type="button" data-topbar-media data-app="media" aria-label="Open Media Player" hidden>
             <span class="topbar-media-art"><img data-topbar-media-cover alt="" width="18" height="18" hidden /><img class="app-image-icon" data-topbar-media-fallback src="./assets/spotify.svg?v=20260824-spotify-v1" width="18" height="18" alt="" /></span>
             <strong data-topbar-media-title>Nothing playing</strong>
             <span class="topbar-media-time" data-topbar-media-time hidden>0:00 / 0:00</span>
@@ -344,7 +351,7 @@
               <span class="status-pill" data-now-playing-state>PAUSED</span>
             </span>
           </div>
-          <button type="button" class="widget-action now-playing-open" data-app="stream">
+          <button type="button" class="widget-action now-playing-open" data-app="media">
             <span class="widget-app-icon now-playing-art" data-now-playing-art>
               <img class="now-playing-cover" data-now-playing-cover width="40" height="40" alt="" referrerpolicy="no-referrer" hidden />
               <span class="now-playing-art-fallback app-icon-stream" data-now-playing-fallback><img class="app-image-icon" src="./assets/spotify.svg?v=20260824-spotify-v1" width="40" height="40" alt="" /></span>
@@ -366,9 +373,9 @@
             <svg class="icon" aria-hidden="true"><use href="#i-volume"></use></svg>
             <label>
               <span class="sr-only">Music volume</span>
-              <input type="range" min="0" max="100" value="55" step="1" data-now-playing-volume aria-label="Music volume" />
+              <input type="range" min="0" max="100" value="100" step="1" data-now-playing-volume aria-label="Music volume" />
             </label>
-            <output data-now-playing-volume-output>55%</output>
+            <output data-now-playing-volume-output>100%</output>
           </div>
         </article>
       </section>
@@ -1139,12 +1146,12 @@
     </template>
 
     <script src="./neo-frame-loader.js?v=20260826-compiler-html-v1" defer></script>
-    <script src="./neo-apps.js?v=20260827-music-direct-session-v4" defer></script>
-    <script src="./neo-music-runtime.js?v=20260827-direct-playback-v2" defer></script>
+    <script src="./neo-apps.js?v=20260827-cinehd-web-dashers-v1" defer></script>
+    <script src="./neo-music-runtime.js?v=20260827-max-volume-v3" defer></script>
     <script src="./neo-wallpaper-engine.js?v=20260826-compiler-html-v1" defer></script>
     <script src="./neo-wallpaper-quality.js?v=20260804-quality-v7" defer></script>
     <script src="./neo-taskbar-preview.js?v=20260825-window-hover-v3" defer></script>
-    <script src="./neo-os.js?v=20260826-ready-discover-v2-minimize-hit-test-v1-neo-browser-build-v1-click-routing-v2-audio-player-labels-v1-large-window-default-v2-geometry-dash-v1-music-optimized-session-v3-taskbar-window-hover-v1-browser-no-native-prompts-v1" defer></script>
+    <script src="./neo-os.js?v=20260827-cinehd-media-routing-v1" defer></script>
     <script src="./neo-window-resize.js?v=20260803-fullscreen-v1" defer></script>
     <script src="./neo-taskbar-menu.js?v=20260805-desktop-menu-v3" defer></script>
     <script src="./neo-rainmeter.js?v=20260825-default-center-v1" defer></script>

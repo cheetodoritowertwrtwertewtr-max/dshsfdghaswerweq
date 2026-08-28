@@ -16,8 +16,17 @@
 
     audio.preload = "auto";
     try {
-      var savedVolume = Number(localStorage.getItem("neo_stream_music_volume"));
-      if (Number.isFinite(savedVolume) && savedVolume >= 0 && savedVolume <= 1) audio.volume = savedVolume;
+      var volumeMigrationKey = "neo_stream_music_volume_max_v1";
+      var shouldStartAtMaximum = localStorage.getItem(volumeMigrationKey) !== "1";
+      var savedVolumeValue = localStorage.getItem("neo_stream_music_volume");
+      var savedVolume = Number(savedVolumeValue);
+      audio.volume = shouldStartAtMaximum || savedVolumeValue === null || !Number.isFinite(savedVolume) || savedVolume < 0 || savedVolume > 1
+        ? 1
+        : savedVolume;
+      if (shouldStartAtMaximum) {
+        localStorage.setItem("neo_stream_music_volume", "1");
+        localStorage.setItem(volumeMigrationKey, "1");
+      }
     } catch (error) {}
 
     function currentTrack() {
