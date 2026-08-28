@@ -71,6 +71,7 @@
       window.dispatchEvent(new CustomEvent("neo-media-state", {
         detail: track ? {
           source: sourceId,
+          appId: "stream",
           active: true,
           playing: playback.playing,
           title: String(track.title || "Music").slice(0, 160),
