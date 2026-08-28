@@ -14,7 +14,12 @@
   pointer-events: none;
   transform: translateY(7px) scale(0.98);
   transform-origin: bottom center;
-  transition: opacity 120ms ease, transform 120ms ease;
+  transition:
+    opacity 160ms ease,
+    transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 180ms ease,
+    background-color 180ms ease;
+  will-change: opacity, transform;
 }
 
 .neo-taskbar-preview[hidden] { display: none; }
@@ -23,6 +28,13 @@
   opacity: 1;
   pointer-events: auto;
   transform: translateY(0) scale(1);
+}
+
+.neo-taskbar-preview.is-open:hover,
+.neo-taskbar-preview.is-open:focus-within {
+  background: rgba(8, 9, 11, 0.94);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.42);
+  transform: translateY(-2px) scale(1.012);
 }
 
 .neo-taskbar-preview-titlebar {
@@ -179,6 +191,30 @@
   -webkit-backdrop-filter: blur(20px) saturate(1.22);
   backdrop-filter: blur(20px) saturate(1.22);
   animation: neo-minimized-card-in 150ms ease both;
+  transform-origin: top center;
+  transition:
+    transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    background-color 180ms ease,
+    box-shadow 180ms ease;
+  will-change: transform;
+}
+
+.neo-minimized-card:hover,
+.neo-minimized-card:focus-within {
+  background: rgba(17, 19, 23, 0.86);
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.38);
+  transform: translateY(3px) scale(1.025);
+}
+
+.neo-minimized-card-open {
+  transition: filter 160ms ease, transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  transform-origin: center;
+}
+
+.neo-minimized-card:hover .neo-minimized-card-open,
+.neo-minimized-card:focus-within .neo-minimized-card-open {
+  filter: brightness(1.08);
+  transform: scale(0.985);
 }
 
 .neo-minimized-card-header {
@@ -290,5 +326,9 @@
 
 @media (prefers-reduced-motion: reduce) {
   .neo-taskbar-preview { transition: none; }
-  .neo-minimized-card { animation: none; }
+  .neo-minimized-card,
+  .neo-minimized-card-open {
+    animation: none;
+    transition: none;
+  }
 }
