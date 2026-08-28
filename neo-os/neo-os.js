@@ -345,6 +345,9 @@
         '<path fill="#050505" d="M47.94 46.86a2.06 2.06 0 0 1-2.83.68c-7.73-4.73-17.47-5.8-28.93-3.18a2.06 2.06 0 1 1-.92-4.01c12.55-2.87 23.32-1.64 32.01 3.67.97.6 1.27 1.87.67 2.84Zm3.77-8.39a2.58 2.58 0 0 1-3.54.85c-8.85-5.44-22.35-7.02-32.82-3.84a2.58 2.58 0 0 1-1.5-4.93c11.97-3.63 26.85-1.87 37 4.36a2.58 2.58 0 0 1 .86 3.56Zm.32-8.74c-10.63-6.31-28.2-6.9-38.34-3.9a3.09 3.09 0 1 1-1.75-5.92c11.65-3.43 31.06-2.75 43.25 4.49a3.09 3.09 0 0 1-3.16 5.33Z"/>' +
       '</svg>';
     }
+    if (name === "cinehd") {
+      return '<span class="app-image-icon cinehd-logo-mark" aria-hidden="true"></span>';
+    }
     var imageIcons = {
       duckduckgo: "./assets/duckduckgo.png",
       chat: "./assets/messages.png",
@@ -515,8 +518,8 @@
     state.textContent = String(detail.state || (playing ? "PLAYING" : paused ? "PAUSED" : "OPEN")).slice(0, 18).toUpperCase();
     titleNode.textContent = title;
     copyNode.textContent = String(detail.copy || detail.subtitle || app.subtitle || "Now playing").trim().slice(0, 180);
-    open.dataset.app = appId;
-    open.setAttribute("aria-label", "Open " + app.title + " for " + title);
+    open.dataset.app = "media";
+    open.setAttribute("aria-label", "Open Media Player for " + title);
     fallback.className = "now-playing-art-fallback " + appIconClass(detail.icon || app.icon || "music");
     fallback.innerHTML = iconMarkup(detail.icon || app.icon || "music");
     art.style.setProperty("--media-hue", String(Number.isFinite(Number(detail.hue)) ? Number(detail.hue) : 158));
@@ -563,9 +566,9 @@
       var topbarFallback = topbarMedia.querySelector("[data-topbar-media-fallback]");
       var topbarTime = topbarMedia.querySelector("[data-topbar-media-time]");
       topbarMedia.hidden = false;
-      topbarMedia.dataset.app = appId;
+      topbarMedia.dataset.app = "media";
       topbarMedia.classList.toggle("is-playing", playing);
-      topbarMedia.setAttribute("aria-label", "Open " + app.title + " for " + title);
+      topbarMedia.setAttribute("aria-label", "Open Media Player for " + title);
       if (topbarTitle) topbarTitle.textContent = title;
       if (topbarTime) {
         topbarTime.hidden = !hasTiming;
@@ -1269,7 +1272,7 @@
       var existing = document.getElementById("neo-browse-runtime-script");
       var script = existing || document.createElement("script");
       script.id = "neo-browse-runtime-script";
-      script.src = "./neo-browser-runtime.js?v=20260827-music-playback-bridge-v2";
+      script.src = "./neo-browser-runtime.js?v=20260827-transport-recovery-v67";
       script.async = true;
       script.onload = function () {
         if (!window.NEO_BROWSER_ENGINE) {

@@ -1,17 +1,23 @@
 (() => {
   "use strict";
 
-  const ENGINE_VERSION = "neo-browse-v66";
+  const ENGINE_VERSION = "neo-browse-v67";
   const OS_SCOPE = "/neo-os/";
-  const ROUTE_PREFIX = "/neo-os/browse-v66/";
+  const ROUTE_PREFIX = "/neo-os/browse-v67/";
   const RUNTIME_ROOT = "/neo-os/browser-runtime";
   const NEW_TAB_DESTINATION = "neo://newtab";
-  const NEW_TAB_PAGE = "/neo-os/browser-newtab.html?v=neo-browse-v66";
+  const NEW_TAB_PAGE = "/neo-os/browser-newtab.html?v=neo-browse-v67";
   const WORKER_URL = `/neo-os/browser-sw.js?engine=${ENGINE_VERSION}`;
   const BAREMUX_WORKER_URL = `${RUNTIME_ROOT}/baremux/worker.js?engine=${ENGINE_VERSION}`;
   const PRIMARY_TRANSPORT_URL = `${RUNTIME_ROOT}/epoxy/index.mjs?engine=${ENGINE_VERSION}`;
   const FALLBACK_TRANSPORT_URL = `${RUNTIME_ROOT}/libcurl/index.mjs?engine=${ENGINE_VERSION}`;
-  const WISP_RELAY = "wss://mages.io/wisp/";
+  const WISP_RELAYS = [
+    "wss://cdn.northstreetumc.org/adblock/",
+    "wss://cdn.pcesc.org/adblock/",
+    "wss://girlspreples.org/wi/",
+    "wss://mages.io/wisp/",
+  ];
+  const WISP_RELAY_CACHE_KEY = `neo-wisp-relay:${ENGINE_VERSION}`;
   let runtimePromise = null;
   let stylesPromise = null;
   let transportConnection = null;
@@ -19,6 +25,7 @@
   let transportSetupPromise = null;
   let transportPrimaryPromise = null;
   let transportFallbackPromise = null;
+  let wispRelayPromise = null;
   let transportRecoveryListenerInstalled = false;
   const appThemePromises = new Map();
 
@@ -30,6 +37,59 @@
         timeoutId = window.setTimeout(() => reject(new Error(message)), milliseconds);
       }),
     ]).finally(() => window.clearTimeout(timeoutId));
+  }
+
+  function probeWispRelay(relay) {
+    return new Promise((resolve, reject) => {
+      let socket;
+      let settled = false;
+      const finish = (error) => {
+        if (settled) return;
+        settled = true;
+        window.clearTimeout(timeoutId);
+        try { socket?.close(); } catch (closeError) {}
+        if (error) reject(error);
+        else resolve(relay);
+      };
+      const timeoutId = window.setTimeout(
+        () => finish(new Error("The relay did not respond.")),
+        2200,
+      );
+      try {
+        socket = new WebSocket(relay);
+        socket.addEventListener("open", () => finish(), { once: true });
+        socket.addEventListener("error", () => finish(new Error("The relay could not be reached.")), { once: true });
+        socket.addEventListener("close", () => finish(new Error("The relay closed before connecting.")), { once: true });
+      } catch (error) {
+        finish(error);
+      }
+    });
+  }
+
+  function selectWispRelay() {
+    if (wispRelayPromise) return wispRelayPromise;
+    wispRelayPromise = (async () => {
+      let cached = "";
+      try { cached = window.sessionStorage.getItem(WISP_RELAY_CACHE_KEY) || ""; } catch (error) {}
+      const candidates = cached && WISP_RELAYS.includes(cached)
+        ? [cached].concat(WISP_RELAYS.filter((relay) => relay !== cached))
+        : WISP_RELAYS.slice();
+      let lastError = null;
+      for (const relay of candidates) {
+        try {
+          await probeWispRelay(relay);
+          try { window.sessionStorage.setItem(WISP_RELAY_CACHE_KEY, relay); } catch (error) {}
+          return relay;
+        } catch (error) {
+          lastError = error;
+        }
+      }
+      throw lastError || new Error("No web relay is available.");
+    })().catch((error) => {
+      wispRelayPromise = null;
+      throw error;
+    });
+    return wispRelayPromise;
   }
 
   function loadScript(id, src) {
@@ -263,8 +323,9 @@
     let lastError = null;
     for (const transportUrl of candidates) {
       try {
+        const relay = await selectWispRelay();
         await withTimeout(
-          connection.setTransport(transportUrl, [{ wisp: WISP_RELAY }]),
+          connection.setTransport(transportUrl, [{ wisp: relay }]),
           12000,
           "The web transport setup timed out.",
         );
@@ -321,13 +382,14 @@
       .catch(() => {})
       .then(() => transportFallbackPromise)
       .catch(() => {})
-      .then(() => {
+      .then(async () => {
         if (!transportConnection) {
           throw new Error("The web transport bridge is unavailable.");
         }
+        const relay = await selectWispRelay();
         return withTimeout(
           transportConnection.setTransport(PRIMARY_TRANSPORT_URL, [
-            { wisp: WISP_RELAY },
+            { wisp: relay },
           ]),
           8000,
           "The music transport setup timed out.",
@@ -354,10 +416,10 @@
 
   async function ensureNavigationTransport(destination) {
     const currentTransport = await ensureTransport();
-    if (!isMusicDestination(destination) || currentTransport !== PRIMARY_TRANSPORT_URL) {
-      return currentTransport;
+    if (isMusicDestination(destination) && currentTransport === PRIMARY_TRANSPORT_URL) {
+      return switchToFallbackTransport().catch(() => currentTransport);
     }
-    return switchToFallbackTransport().catch(() => currentTransport);
+    return currentTransport;
   }
 
   function switchToFallbackTransport() {
@@ -366,13 +428,14 @@
     transportFallbackPromise = Promise.resolve()
       .then(() => transportSetupPromise)
       .catch(() => {})
-      .then(() => {
+      .then(async () => {
         if (!transportConnection) {
           throw new Error("The web transport bridge is unavailable.");
         }
+        const relay = await selectWispRelay();
         return withTimeout(
           transportConnection.setTransport(FALLBACK_TRANSPORT_URL, [
-            { wisp: WISP_RELAY },
+            { wisp: relay },
           ]),
           12000,
           "The fallback web transport setup timed out.",
@@ -397,13 +460,19 @@
     return transportFallbackPromise;
   }
 
+  function switchToAlternateTransport() {
+    return activeTransportUrl === FALLBACK_TRANSPORT_URL
+      ? switchToPrimaryTransport()
+      : switchToFallbackTransport();
+  }
+
   function installTransportRecoveryListener() {
     if (transportRecoveryListenerInstalled) return;
     transportRecoveryListenerInstalled = true;
     navigator.serviceWorker.addEventListener("message", (event) => {
       if (event.data?.type !== "neo-browser:transport-fallback" || event.data.engine !== ENGINE_VERSION) return;
       const reply = event.ports[0];
-      switchToFallbackTransport().then(
+      switchToAlternateTransport().then(
         (transport) => reply?.postMessage({ ok: true, transport }),
         (error) =>
           reply?.postMessage({
@@ -1430,7 +1499,7 @@
       tab.loading = true;
       if (tab.id === activeTabId) syncActiveChrome();
       try {
-        await switchToFallbackTransport();
+        await switchToAlternateTransport();
         if (!tabs.includes(tab) || tab.navigationId !== navigationId || tab.destination !== destination) return true;
         tab.frame.src = runtime.routeFor(destination);
       } catch (error) {

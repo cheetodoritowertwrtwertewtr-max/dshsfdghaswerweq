@@ -20,12 +20,28 @@
       category: "Media",
       aliases: ["music", "spotify", "stream", "songs", "albums", "artists", "radio", "playlists", "mp3", "local music", "audio player"]
     },
+    cinehd: {
+      id: "cinehd",
+      title: "CineHD",
+      subtitle: "Movies and series",
+      icon: "cinehd",
+      template: "browser-template",
+      browserTarget: "https://cinehd.vc/home",
+      browserChrome: false,
+      keepAlive: true,
+      width: 1180,
+      height: 760,
+      launcher: true,
+      pinned: false,
+      category: "Media",
+      aliases: ["cinehd", "cine hd", "movies", "series", "tv", "streaming"]
+    },
     "geometry-dash": {
       id: "geometry-dash",
-      title: "Geometry Dash",
-      subtitle: "Rhythm platformer",
+      title: "Geometry Dash (MORE LEVELS)",
+      subtitle: "Web Dashers rhythm platformer",
       icon: "geometry-dash",
-      route: "../games/geometry-dash-lite.html",
+      route: "../games/web-dashers.html",
       width: 1180,
       height: 760,
       launcher: true,
@@ -218,6 +234,16 @@
         localStorage.setItem(key, JSON.stringify(ids));
       });
       localStorage.setItem(geometryDashMigrationKey, "1");
+    }
+
+    var cineHdMigrationKey = "neo_os_cinehd_app_v1";
+    if (localStorage.getItem(cineHdMigrationKey) !== "1") {
+      var installedApps = JSON.parse(localStorage.getItem("neo_os_installed_apps_v1") || "null");
+      if (Array.isArray(installedApps) && installedApps.indexOf("cinehd") === -1) {
+        installedApps.push("cinehd");
+        localStorage.setItem("neo_os_installed_apps_v1", JSON.stringify(installedApps));
+      }
+      localStorage.setItem(cineHdMigrationKey, "1");
     }
   } catch (error) {}
 })();
