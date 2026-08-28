@@ -405,7 +405,7 @@
 }
 
 .wallpaper-online-card .wallpaper-card-preview.is-missing::before {
-  content: "Preview unavailable";
+  content: "Image unavailable";
   position: absolute;
   inset: 0;
   display: grid;

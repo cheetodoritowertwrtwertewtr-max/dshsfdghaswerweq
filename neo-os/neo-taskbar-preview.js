@@ -345,7 +345,7 @@
     var node = document.createElement("section");
     node.className = "neo-taskbar-preview";
     node.hidden = true;
-    node.setAttribute("aria-label", "Window preview");
+    node.setAttribute("aria-label", "Window thumbnail");
     node.innerHTML =
       '<header class="neo-taskbar-preview-titlebar">' +
         '<span><strong data-taskbar-preview-title></strong><small data-taskbar-preview-status></small></span>' +

@@ -344,7 +344,7 @@
       '  </div>',
       '  <dialog class="files-dialog" data-files-name-dialog><form method="dialog"><header><strong data-files-name-title>New folder</strong><button type="button" data-files-dialog-close aria-label="Close">' + shell.icon("close") + '</button></header><label><span data-files-name-label>Name</span><input type="text" data-files-name-input maxlength="180" autocomplete="off" /></label><p data-files-name-error role="alert"></p><footer><button type="button" data-files-dialog-close>Cancel</button><button class="files-primary" type="submit" value="confirm">Create</button></footer></form></dialog>',
       '  <dialog class="files-dialog files-confirm" data-files-delete-dialog><form method="dialog"><header><strong>Delete permanently?</strong><button type="button" data-files-dialog-close aria-label="Close">' + shell.icon("close") + '</button></header><p data-files-delete-copy>This cannot be undone.</p><footer><button type="button" data-files-dialog-close>Cancel</button><button class="files-danger" type="submit" value="confirm">Delete</button></footer></form></dialog>',
-      '  <dialog class="files-preview-dialog" data-files-preview-dialog><header><strong data-files-preview-title>Preview</strong><div><button type="button" data-files-preview-download>' + shell.icon("download") + '<span>Save to device</span></button><button type="button" data-files-dialog-close aria-label="Close preview">' + shell.icon("close") + '</button></div></header><div class="files-preview-stage" data-files-preview-stage></div></dialog>',
+      '  <dialog class="files-preview-dialog" data-files-preview-dialog><header><strong data-files-preview-title>Open file</strong><div><button type="button" data-files-preview-download>' + shell.icon("download") + '<span>Save to device</span></button><button type="button" data-files-dialog-close aria-label="Close file">' + shell.icon("close") + '</button></div></header><div class="files-preview-stage" data-files-preview-stage></div></dialog>',
       '  <div class="files-context-menu" data-files-context-menu role="menu" hidden><button type="button" role="menuitem" data-files-action="open">Open</button><button type="button" role="menuitem" data-files-action="rename">Rename</button><button type="button" role="menuitem" data-files-action="download">Save to device</button><span></span><button type="button" role="menuitem" data-files-action="trash">Move to trash</button><button type="button" role="menuitem" data-files-action="restore">Restore</button><button type="button" role="menuitem" class="is-danger" data-files-action="delete">Delete permanently</button></div>',
       '  <p class="sr-only" data-files-live aria-live="polite"></p>',
       '</section>'
@@ -607,7 +607,7 @@
     inspector.textContent = "";
     inspector.classList.toggle("is-empty", !entry);
     if (!entry) {
-      inspector.innerHTML = '<div class="files-inspector-empty"><span>' + api.icon("info") + '</span><strong>File details</strong><p>Select an item to preview it and manage it.</p></div>';
+      inspector.innerHTML = '<div class="files-inspector-empty"><span>' + api.icon("info") + '</span><strong>File details</strong><p>Select an item to view it and manage it.</p></div>';
       return;
     }
     var head = document.createElement("div");
@@ -638,7 +638,7 @@
 
     var actions = document.createElement("div");
     actions.className = "files-inspector-actions";
-    actions.appendChild(inspectorButton("open", entry.kind === "folder" ? "Open folder" : "Preview", entry.kind === "folder" ? "folder" : "external", "files-primary"));
+    actions.appendChild(inspectorButton("open", entry.kind === "folder" ? "Open folder" : "Open", entry.kind === "folder" ? "folder" : "external", "files-primary"));
     if (entry.kind === "file") actions.appendChild(inspectorButton("download", "Save to device", "download"));
     if (!protectedFolderIds.has(entry.id) && !entry.trashedAt) actions.appendChild(inspectorButton("rename", "Rename", null));
     if (entry.trashedAt) {
@@ -944,7 +944,7 @@
     fallback.className = "files-preview-fallback";
     fallback.innerHTML = api.icon(iconFor(entry)) + "<strong></strong><p></p>";
     fallback.querySelector("strong").textContent = entry.name;
-    fallback.querySelector("p").textContent = formatBytes(entry.size) + " - preview is not available for this file type.";
+    fallback.querySelector("p").textContent = formatBytes(entry.size) + " - this file type cannot be opened here.";
     stage.appendChild(fallback);
   }
 

@@ -93,7 +93,7 @@ export async function handler(event) {
   }
 
   var userId = accountKey(readBearerUsername(event.headers));
-  if (!userId) return jsonResponse(401, { code: "login_required", detail: "Please sign in again" });
+  if (!userId) return jsonResponse(401, { code: "login_required", detail: "Choose your name again" });
   var compact = String((event.queryStringParameters && event.queryStringParameters.compact) || "") === "1";
 
   var controller = new AbortController();
@@ -112,7 +112,7 @@ export async function handler(event) {
     var allMessages = values[2] || {};
     var rawProfiles = values[3] || {};
     if (!account || account.ugpDeleted || accountKey(account.username || userId) !== userId) {
-      return jsonResponse(403, { code: "account_not_linked", detail: "This NEO account is not linked to Messages." });
+      return jsonResponse(403, { code: "account_not_linked", detail: "This chat name is not linked to Messages." });
     }
 
     var rooms = {};

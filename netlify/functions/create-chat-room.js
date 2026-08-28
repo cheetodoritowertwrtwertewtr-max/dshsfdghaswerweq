@@ -53,7 +53,7 @@ export async function handler(event) {
   }
 
   var currentId = accountKey(readBearerUsername(event.headers));
-  if (!currentId) return jsonResponse(401, { code: "login_required", detail: "Please sign in again" });
+  if (!currentId) return jsonResponse(401, { code: "login_required", detail: "Choose your name again" });
   var rawBody = event.isBase64Encoded ? Buffer.from(event.body || "", "base64").toString("utf8") : String(event.body || "");
   if (Buffer.byteLength(rawBody, "utf8") > MAX_BODY_BYTES) {
     return jsonResponse(413, { code: "request_too_large", detail: "Request is too large" });
@@ -82,10 +82,10 @@ export async function handler(event) {
     var target = values[1];
     var rooms = values[2] || {};
     if (!current || current.ugpDeleted || accountKey(current.username || currentId) !== currentId) {
-      return jsonResponse(403, { code: "login_required", detail: "Chat account is not linked" });
+      return jsonResponse(403, { code: "login_required", detail: "Chat name is not linked" });
     }
     if (isBanned(current)) {
-      return jsonResponse(403, { code: "banned", detail: "This account is banned from chatting" });
+      return jsonResponse(403, { code: "banned", detail: "This name is blocked from chat" });
     }
     if (!target || target.ugpDeleted || isBanned(target)) {
       return jsonResponse(404, { code: "user_not_found", detail: "That username is unavailable" });
