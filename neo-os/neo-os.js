@@ -883,6 +883,37 @@
     return button;
   }
 
+  function fitDockToViewport(dock) {
+    var taskbar = dock && dock.closest(".taskbar");
+    if (!taskbar) return;
+    taskbar.style.removeProperty("--vertical-dock-hit");
+    taskbar.style.removeProperty("--vertical-dock-art");
+    taskbar.style.removeProperty("--vertical-dock-gap");
+    if (window.innerWidth <= 700) return;
+
+    var count = dock.querySelectorAll(".dock-button").length;
+    if (!count) return;
+    var viewportHeight = Math.max(320, window.innerHeight || document.documentElement.clientHeight || 720);
+    var naturalHit = Math.min(46, Math.max(36, viewportHeight * 0.051));
+    var naturalArt = Math.min(34, Math.max(27, viewportHeight * 0.038));
+    var naturalGap = Math.min(7, Math.max(2, viewportHeight * 0.0065));
+    var centerGap = Math.min(7, Math.max(3, viewportHeight * 0.007));
+    var startHeight = 42;
+    var verticalPadding = viewportHeight <= 660 ? 12 : 16;
+    var available = viewportHeight - verticalPadding - startHeight - (centerGap * 2);
+    var fittedHit = Math.floor((available - (naturalGap * Math.max(0, count - 1))) / count);
+    var hit = Math.max(28, Math.min(naturalHit, fittedHit));
+    var gap = naturalGap;
+
+    if ((hit * count) + (gap * Math.max(0, count - 1)) > available && count > 1) {
+      gap = Math.max(0, (available - (hit * count)) / (count - 1));
+    }
+    if (hit >= naturalHit - 0.25 && gap >= naturalGap - 0.25) return;
+    taskbar.style.setProperty("--vertical-dock-hit", hit + "px");
+    taskbar.style.setProperty("--vertical-dock-art", Math.max(22, Math.min(naturalArt, hit - 9)) + "px");
+    taskbar.style.setProperty("--vertical-dock-gap", gap + "px");
+  }
+
   function renderDock() {
     var dock = document.getElementById("neo-dock");
     if (!dock) return;
@@ -893,6 +924,7 @@
     openWindows.forEach(function (_, id) { if (apps[id]) visible.set(id, apps[id]); });
     dock.textContent = "";
     visible.forEach(function (app) { dock.appendChild(createDockButton(app)); });
+    fitDockToViewport(dock);
   }
 
   function normalizePinnedAppOrder() {
@@ -4874,6 +4906,7 @@
     window.addEventListener("online", updateConnection);
     window.addEventListener("offline", updateConnection);
     window.addEventListener("resize", function () {
+      fitDockToViewport(document.getElementById("neo-dock"));
       if (isSmallScreen()) {
         openWindows.forEach(function (win) { win.classList.remove("is-maximized"); });
       }
