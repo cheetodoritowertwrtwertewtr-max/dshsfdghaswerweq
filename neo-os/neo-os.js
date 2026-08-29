@@ -15,6 +15,7 @@
   var WALLPAPER_DB = "neo_os_wallpapers";
   var WALLPAPER_STORE = "assets";
   var NEO_CHAT_POLL_MS = 4500;
+  var NEO_CHAT_SLOW_MODE_MS = 5000;
   var root = document.documentElement;
   var windowLayer = document.getElementById("window-layer");
   var launcher = document.getElementById("app-launcher");
@@ -819,8 +820,8 @@
     var name = session.username || "Guest";
     if (initial) initial.textContent = session.id ? name.charAt(0).toUpperCase() : "?";
     button.classList.toggle("is-signed-in", Boolean(session.id));
-    button.title = session.id ? name : "Sign in";
-    button.setAttribute("aria-label", session.id ? "Open Messages as " + name : "Sign in to NEO");
+    button.title = session.id ? name : "Choose a name";
+    button.setAttribute("aria-label", session.id ? "Open Messages as " + name : "Choose a chat name");
   }
 
   function initBatteryStatus() {
@@ -882,6 +883,37 @@
     return button;
   }
 
+  function fitDockToViewport(dock) {
+    var taskbar = dock && dock.closest(".taskbar");
+    if (!taskbar) return;
+    taskbar.style.removeProperty("--vertical-dock-hit");
+    taskbar.style.removeProperty("--vertical-dock-art");
+    taskbar.style.removeProperty("--vertical-dock-gap");
+    if (window.innerWidth <= 700) return;
+
+    var count = dock.querySelectorAll(".dock-button").length;
+    if (!count) return;
+    var viewportHeight = Math.max(320, window.innerHeight || document.documentElement.clientHeight || 720);
+    var naturalHit = Math.min(46, Math.max(36, viewportHeight * 0.051));
+    var naturalArt = Math.min(34, Math.max(27, viewportHeight * 0.038));
+    var naturalGap = Math.min(7, Math.max(2, viewportHeight * 0.0065));
+    var centerGap = Math.min(7, Math.max(3, viewportHeight * 0.007));
+    var startHeight = 42;
+    var verticalPadding = viewportHeight <= 660 ? 12 : 16;
+    var available = viewportHeight - verticalPadding - startHeight - (centerGap * 2);
+    var fittedHit = Math.floor((available - (naturalGap * Math.max(0, count - 1))) / count);
+    var hit = Math.max(28, Math.min(naturalHit, fittedHit));
+    var gap = naturalGap;
+
+    if ((hit * count) + (gap * Math.max(0, count - 1)) > available && count > 1) {
+      gap = Math.max(0, (available - (hit * count)) / (count - 1));
+    }
+    if (hit >= naturalHit - 0.25 && gap >= naturalGap - 0.25) return;
+    taskbar.style.setProperty("--vertical-dock-hit", hit + "px");
+    taskbar.style.setProperty("--vertical-dock-art", Math.max(22, Math.min(naturalArt, hit - 9)) + "px");
+    taskbar.style.setProperty("--vertical-dock-gap", gap + "px");
+  }
+
   function renderDock() {
     var dock = document.getElementById("neo-dock");
     if (!dock) return;
@@ -892,6 +924,7 @@
     openWindows.forEach(function (_, id) { if (apps[id]) visible.set(id, apps[id]); });
     dock.textContent = "";
     visible.forEach(function (app) { dock.appendChild(createDockButton(app)); });
+    fitDockToViewport(dock);
   }
 
   function normalizePinnedAppOrder() {
@@ -1307,7 +1340,7 @@
         document.head.appendChild(style);
       }
       var script = document.createElement("script");
-      script.src = "./neo-os-features.js?v=20260828-close-stop-v2";
+      script.src = "./neo-os-features.js?v=20260828-minimized-mute-v3";
       script.async = true;
       script.onload = function () {
         if (!window.NEO_FEATURES) {
@@ -1335,7 +1368,7 @@
         document.head.appendChild(style);
       }
       var script = document.createElement("script");
-      script.src = "./neo-files.js?v=20260827-file-explorer-ui-v1";
+      script.src = "./neo-files.js?v=20260828-open-file-copy-v1";
       script.async = true;
       script.onload = function () {
         if (!window.NEO_FILES) {
@@ -1623,20 +1656,24 @@
 
     function openSignInPage() {
       stopRequest();
-      currentQuery = "NEO Account";
+      currentQuery = "Choose a name";
       currentTarget = "";
       input.value = currentQuery;
       content.textContent = "";
       setBrowserState("loading");
-       import("./neo-account-signin.js?v=4").then(function (runtime) {
-        if(currentQuery!=="NEO Account")return;
+       import("./neo-account-signin.js?v=5").then(function (runtime) {
+        if(currentQuery!=="Choose a name")return;
         signInStop = runtime.mountAccountSignIn(content, function () { setBrowserState("content"); }, function (payload) {
           window.dispatchEvent(new CustomEvent("neo-auth-changed", { detail: { user: payload.user } }));
-          showToast("Signed in", "Messages connected to " + payload.user.username + ".", "chat");
+          showToast("Chat ready", "You are now " + payload.user.username + ".", "chat");
           window.setTimeout(function () { openApp("chat"); }, 350);
+        }, {
+          title: "Choose your name",
+          copy: "This is how you will appear in Global Chat.",
+          success: "Name saved. Opening Global Chat..."
         });
       }).catch(function () {
-        if(currentQuery==="NEO Account")setBrowserState("error","Sign-in unavailable.");
+        if(currentQuery==="Choose a name")setBrowserState("error","Name service unavailable.");
       });
     }
 
@@ -1841,7 +1878,7 @@
     var profileStatus = app.querySelector("[data-chat-profile-status]");
     var profileFeedback = app.querySelector("[data-chat-profile-feedback]");
     var profileDm = app.querySelector("[data-chat-profile-dm]");
-    var state = { session: null, accounts: {}, rooms: {}, recent: [], local: {}, people: [], selected: "global", profileUser: "", loading: true, error: "", search: "", searchTimer: 0, searchController: null, controller: null, refreshRequest: null, poll: 0, pollFailures: 0, loadVersion: 0, pendingCount: 0, sendRequests: {}, destroyed: false };
+    var state = { session: null, accounts: {}, rooms: {}, recent: [], local: {}, people: [], selected: "global", profileUser: "", loading: true, error: "", search: "", searchTimer: 0, searchController: null, controller: null, refreshRequest: null, poll: 0, pollFailures: 0, loadVersion: 0, pendingCount: 0, sendRequests: {}, slowUntil: 0, slowTimer: 0, destroyed: false };
 
     function roomObjects() {
       if (!state.session || !state.session.id) return [];
@@ -1900,18 +1937,45 @@
     function canCompose() {
       return Boolean(state.session && state.session.id && state.session.token && !state.loading && !state.error && state.accounts[state.session.id]);
     }
+    function slowModeRemaining() {
+      return Math.max(0, Number(state.slowUntil || 0) - Date.now());
+    }
     function syncComposerState() {
       var enabled = canCompose();
       input.disabled = !enabled;
-      sendButton.disabled = !enabled || !String(input.value || "").trim();
+      sendButton.disabled = !enabled || slowModeRemaining() > 0 || !String(input.value || "").trim();
       form.setAttribute("aria-busy", state.pendingCount ? "true" : "false");
+    }
+    function beginSlowMode(duration) {
+      window.clearInterval(state.slowTimer);
+      state.slowUntil = Date.now() + Math.max(250, Number(duration || NEO_CHAT_SLOW_MODE_MS));
+      function renderSlowMode() {
+        var remaining = slowModeRemaining();
+        if (remaining <= 0) {
+          window.clearInterval(state.slowTimer);
+          state.slowTimer = 0;
+          state.slowUntil = 0;
+          if (feedback.dataset.slowMode === "true") {
+            feedback.textContent = "";
+            delete feedback.dataset.slowMode;
+          }
+          syncComposerState();
+          return;
+        }
+        feedback.dataset.slowMode = "true";
+        feedback.textContent = "Slow mode: send again in " + Math.max(1, Math.ceil(remaining / 1000)) + "s.";
+        syncComposerState();
+      }
+      renderSlowMode();
+      state.slowTimer = window.setInterval(renderSlowMode, 250);
     }
 
     function renderHeader() {
       if (!state.session || !state.session.id) {
         title.textContent = "Messages";
-        subtitle.textContent = "Sign in to continue";
-        thread.setAttribute("aria-label", "Messages sign in");
+        subtitle.textContent = "Choose a name to continue";
+        thread.setAttribute("aria-label", "Messages name setup");
+        headingAvatar.classList.remove("is-global");
         applyNativeChatAvatar(headingAvatar, {}, "M");
         return;
       }
@@ -1919,8 +1983,9 @@
       var room = roomById(state.selected);
       var account = state.selected === "global" || isServerRoom(room) ? {} : otherRoomAccount(room || {});
       title.textContent = name;
-      subtitle.textContent = state.error ? "Unavailable" : (state.selected === "global" ? "Shared public conversation" : (isServerRoom(room) ? "Public server" : "Private conversation"));
+      subtitle.textContent = state.error ? "Unavailable" : (state.selected === "global" ? "Shared public conversation · Slow mode 5s" : (isServerRoom(room) ? "Public server · Slow mode 5s" : "Private conversation · Slow mode 5s"));
       thread.setAttribute("aria-label", name + " messages");
+      headingAvatar.classList.toggle("is-global", state.selected === "global");
       applyNativeChatAvatar(headingAvatar, account, state.selected === "global" ? "G" : name);
     }
 
@@ -1964,7 +2029,7 @@
         if (serverSection) serverSection.hidden = true;
         var signedOutCopy = document.createElement("p");
         signedOutCopy.className = "messages-room-empty";
-        signedOutCopy.textContent = "Sign in to view your conversations.";
+        signedOutCopy.textContent = "Choose a name to view your conversations.";
         roomList.appendChild(signedOutCopy);
         return;
       }
@@ -2059,14 +2124,14 @@
       icon.setAttribute("aria-hidden", "true");
       icon.innerHTML = '<svg class="icon"><use href="#i-chat"></use></svg>';
       var strong = document.createElement("strong");
-      strong.textContent = "Sign in to message";
+      strong.textContent = "Choose your name";
       var paragraph = document.createElement("p");
-      paragraph.textContent = "Use your NEO account to access Global Chat and direct messages.";
+      paragraph.textContent = "Pick a name to join Global Chat and direct messages.";
       var action = document.createElement("button");
       action.type = "button";
       action.className = "messages-auth-action";
-      action.textContent = "Sign in";
-      action.addEventListener("click", function () { openBrowserPage("sign-in", "NEO Account"); });
+      action.textContent = "Choose name";
+      action.addEventListener("click", function () { openBrowserPage("sign-in", "Choose a name"); });
       box.append(icon, strong, paragraph, action);
       thread.appendChild(box);
     }
@@ -2322,6 +2387,9 @@
       Object.values(state.sendRequests).forEach(function (controller) { controller.abort(); });
       state.sendRequests = {};
       state.pendingCount = 0;
+      window.clearInterval(state.slowTimer);
+      state.slowTimer = 0;
+      state.slowUntil = 0;
       state.refreshRequest = null;
       state.pollFailures = 0;
       window.clearInterval(state.poll);
@@ -2337,15 +2405,15 @@
       state.local = {};
       state.people = [];
       feedback.textContent = "";
-      accountTag.textContent = signedIn ? state.session.username : "Sign in required";
+      accountTag.textContent = signedIn ? state.session.username : "Name required";
       signInButton.hidden = signedIn;
       searchInput.disabled = !signedIn;
       composeButton.disabled = !signedIn;
       app.classList.toggle("is-signed-out", !signedIn);
       input.value = "";
-      input.placeholder = signedIn ? "iMessage" : "Sign in to message";
+      input.placeholder = signedIn ? "iMessage" : "Choose a name to message";
       syncComposerState();
-      setConnection(signedIn ? "Checking account..." : "Signed out", false);
+      setConnection(signedIn ? "Checking name..." : "Name not set", false);
       renderAll();
       if (!signedIn) {
         state.loading = false;
@@ -2361,8 +2429,8 @@
         state.accounts = Object.assign({}, payload.profiles || {});
         state.loading = false;
         if (!linkedUsername) {
-          state.error = "This NEO account is not linked to Messages.";
-          setConnection("Account not linked", false);
+          state.error = "This chat name is not linked to Messages.";
+          setConnection("Name not linked", false);
         } else {
           state.accounts[state.session.id] = Object.assign({}, state.accounts[state.session.id] || {}, payload.account || {}, { username: linkedUsername });
           searchInput.disabled = false;
@@ -2384,13 +2452,13 @@
           } catch (storageError) {}
           state.session = { username: "", id: "", token: "" };
           state.error = "";
-          accountTag.textContent = "Sign in required";
+          accountTag.textContent = "Name required";
           signInButton.hidden = false;
           searchInput.disabled = true;
           composeButton.disabled = true;
-          input.placeholder = "Sign in to message";
+          input.placeholder = "Choose a name to message";
           app.classList.add("is-signed-out");
-          setConnection("Signed out", false);
+          setConnection("Name not set", false);
           syncComposerState();
           renderAll();
           return;
@@ -2426,6 +2494,10 @@
     function sendMessage(text, retryMessage) {
       var clean = String(retryMessage ? retryMessage.text : text || "").trim();
       if (!clean || !canCompose()) return;
+      if (slowModeRemaining() > 0) {
+        beginSlowMode(slowModeRemaining());
+        return;
+      }
       var roomId = String(retryMessage ? retryMessage.room : state.selected || "global");
       if (roomId !== "global" && !roomById(roomId)) {
         feedback.textContent = "That conversation is no longer available.";
@@ -2468,9 +2540,10 @@
       }).then(function (response) {
         return response.json().catch(function () { return {}; }).then(function (payload) {
           if (!response.ok) {
-            var requestError = new Error(payload.detail || (response.status === 404 ? "Message sending is unavailable in this preview." : "Could not send message."));
+            var requestError = new Error(payload.detail || (response.status === 404 ? "Message sending is unavailable right now." : "Could not send message."));
             requestError.status = response.status;
             requestError.code = payload.code || "";
+            requestError.retryAfterMs = Number(payload.retryAfterMs || 0);
             throw requestError;
           }
           if (!payload.message) throw new Error("The message service returned an incomplete response.");
@@ -2482,11 +2555,17 @@
         var delivered = nativeChatRows([message])[0];
         if (delivered && !state.recent.some(function (item) { return messageIdentity(item) === messageIdentity(delivered); })) state.recent.push(delivered);
         if (state.rooms[roomId]) state.rooms[roomId].updatedAt = Number(message.time || Date.now());
-        feedback.textContent = "";
+        beginSlowMode(NEO_CHAT_SLOW_MODE_MS);
         renderAll(true);
         window.setTimeout(function () { loadRecent(true); }, 250);
       }).catch(function (error) {
         if (state.destroyed || requestVersion !== state.loadVersion) return;
+        if (error && error.code === "slow_mode") {
+          state.local[roomId] = (state.local[roomId] || []).filter(function (item) { return item.clientId !== clientId; });
+          beginSlowMode(error.retryAfterMs || NEO_CHAT_SLOW_MODE_MS);
+          renderAll(true);
+          return;
+        }
         optimistic.pending = false;
         optimistic.failed = true;
         feedback.textContent = error && error.name === "AbortError"
@@ -2534,7 +2613,7 @@
       searchInput.focus({ preventScroll: true });
       searchInput.select();
     });
-    signInButton.addEventListener("click", function () { openBrowserPage("sign-in", "NEO Account"); });
+    signInButton.addEventListener("click", function () { openBrowserPage("sign-in", "Choose a name"); });
     app.querySelector("[data-chat-back]").addEventListener("click", function () { app.classList.remove("is-conversation-open"); });
     if (profileDm) profileDm.addEventListener("click", function () { startDirectMessage(state.profileUser); });
     if (hostWindow) hostWindow.addEventListener("neo-chat-open-section", function (event) {
@@ -2559,6 +2638,7 @@
     if (hostWindow) hostWindow._neoMessagesCleanup = function () {
       state.destroyed = true;
       window.clearInterval(state.poll);
+      window.clearInterval(state.slowTimer);
       window.clearTimeout(state.searchTimer);
       if (state.controller) state.controller.abort();
       if (state.searchController) state.searchController.abort();
@@ -2616,6 +2696,57 @@
 
     var timeout = 0;
     var hostWindow = body.closest(".neo-window");
+    function handleEmbeddedMediaState(event) {
+      if (event.source !== frame.contentWindow) return;
+      var data = event.data;
+      if (!data || typeof data !== "object") return;
+      if (data.type === "neo-shell:video-route") {
+        if (data.active === true) pauseMusicForVideoFocus();
+        window.dispatchEvent(new CustomEvent("neo-media-priority", {
+          detail: {
+            source: "route-focus:" + app.id,
+            active: data.active === true,
+            kind: "video",
+            pauseWallpaper: true
+          }
+        }));
+        return;
+      }
+      if (data.type !== "neo-shell:media-state") return;
+      var videoRoute = app.id === "youtube-app" || app.id === "browser";
+      window.dispatchEvent(new CustomEvent("neo-media-state", {
+        detail: {
+          source: "route-media:" + app.id,
+          appId: app.id,
+          active: data.active === true,
+          playing: data.playing === true,
+          muted: data.muted === true,
+          kind: videoRoute ? "video" : "media",
+          pauseWallpaper: videoRoute
+        }
+      }));
+    }
+    function clearEmbeddedMediaState() {
+      window.dispatchEvent(new CustomEvent("neo-media-priority", {
+        detail: {
+          source: "route-focus:" + app.id,
+          active: false,
+          kind: "video",
+          pauseWallpaper: true
+        }
+      }));
+      window.dispatchEvent(new CustomEvent("neo-media-state", {
+        detail: {
+          source: "route-media:" + app.id,
+          appId: app.id,
+          active: false,
+          playing: false,
+          muted: false,
+          kind: "video",
+          pauseWallpaper: true
+        }
+      }));
+    }
     function relayNeoBrowserMessage(event) {
       if (app.id !== "browser" || event.source === frame.contentWindow) return;
       var data = event.data;
@@ -2626,12 +2757,13 @@
         // Ignore messages sent while the browser frame is being replaced.
       }
     }
-    if (app.id === "browser") {
-      window.addEventListener("message", relayNeoBrowserMessage);
-      if (hostWindow) hostWindow._neoExtraCleanup = function () {
-        window.removeEventListener("message", relayNeoBrowserMessage);
-      };
-    }
+    window.addEventListener("message", handleEmbeddedMediaState);
+    if (app.id === "browser") window.addEventListener("message", relayNeoBrowserMessage);
+    if (hostWindow) hostWindow._neoExtraCleanup = function () {
+      window.removeEventListener("message", handleEmbeddedMediaState);
+      if (app.id === "browser") window.removeEventListener("message", relayNeoBrowserMessage);
+      clearEmbeddedMediaState();
+    };
     function applyHostIntegration() {
       if (app.id !== "browser") return;
       try {
@@ -2685,6 +2817,7 @@
       showToast("App not available", app.title + " is not available on this device.", "apps");
       return null;
     }
+    if (id === "youtube-app") pauseMusicForVideoFocus();
     setLauncherOpen(false);
     if (app.launcher) recordRecentApp(id);
     var existing = openWindows.get(id);
@@ -2782,6 +2915,13 @@
       try { renderNowPlaying({ source: nowPlayingState.source, active: false }); } catch (error) {}
     }
     try { renderNowPlaying({ source: "browse-media:stream", active: false }); } catch (error) {}
+  }
+
+  function pauseMusicForVideoFocus() {
+    if (!musicRuntime || typeof musicRuntime.pauseWindow !== "function") return false;
+    var musicWindow = musicRuntime.getWindow("stream", openWindows);
+    if (!musicWindow) return false;
+    try { return musicRuntime.pauseWindow(musicWindow, "stream"); } catch (error) { return false; }
   }
 
   function closeWindow(win, forceDestroy) {
@@ -4250,7 +4390,7 @@
       && selectedCard.getAttribute("data-wallpaper-preview-available") === "true");
     var canPause = isActive && (isCanvas || isVideo || isWeb || isAnimatedImage);
     var isPaused = Boolean(isActive && (state.playback === "paused" || state.playback === "blocked"));
-    var kind = isVideo ? "Video" : isAnimatedImage ? "Animated image" : isPreview ? "High-DPI animation" : isCanvas ? "Canvas animation" : isWeb ? "Live animation" : record ? "Local image" : isOnlinePreview ? "Web preview" : isOnlineAnimation ? "1080p animation" : "Static wallpaper";
+    var kind = isVideo ? "Video" : isAnimatedImage ? "Animated image" : isPreview ? "High-DPI animation" : isCanvas ? "Canvas animation" : isWeb ? "Live animation" : record ? "Local image" : isOnlinePreview ? "Web animation" : isOnlineAnimation ? "1080p animation" : "Static wallpaper";
     var runtime = studio.querySelector("[data-wallpaper-runtime-state]");
     var toggle = studio.querySelector('[data-wallpaper-command="toggle"]');
     var mute = studio.querySelector('[data-wallpaper-command="mute"]');
@@ -4519,26 +4659,23 @@
     guest.addEventListener("click", function () {
       try { sessionStorage.setItem(GUEST_SESSION_KEY, "1"); } catch (error) {}
       dismissGate();
-      showToast("Guest session", "You can sign in from the account button at any time.", "check");
+      showToast("Chat skipped", "Choose a name later from the account button.", "check");
     }, { once: true });
 
-    import("./neo-account-signin.js?v=4").then(function (runtime) {
+    import("./neo-account-signin.js?v=5").then(function (runtime) {
       if (gate.hidden) return;
       gate._neoAuthCleanup = runtime.mountAccountSignIn(mount, function () {}, function (payload) {
         try { sessionStorage.removeItem(GUEST_SESSION_KEY); } catch (error) {}
         window.dispatchEvent(new CustomEvent("neo-auth-changed", { detail: { user: payload.user } }));
         dismissGate();
-        showToast("Welcome", "Signed in as " + payload.user.username + ".", "check");
+        showToast("Chat ready", "You are now " + payload.user.username + ".", "check");
       }, {
-        loginTitle: "Sign in to your workspace",
-        registerTitle: "Create your NEO account",
-        loginCopy: "Use your NEO username and password to continue.",
-        registerCopy: "Choose a unique username and a password with at least 8 characters.",
-        loginSuccess: "Signed in. Opening your workspace...",
-        registerSuccess: "Account created. Opening your workspace..."
+        title: "Choose your name",
+        copy: "This is how you will appear in Global Chat.",
+        success: "Name saved. Opening your workspace..."
       });
     }).catch(function () {
-      mount.innerHTML = '<div class="neo-login-load-error" role="alert"><strong>Account access is unavailable</strong><p>Continue as Guest, then try signing in from the account button.</p></div>';
+      mount.innerHTML = '<div class="neo-login-load-error" role="alert"><strong>Name service unavailable</strong><p>Continue without chat, then try again from the account button.</p></div>';
     });
   }
 
@@ -4567,6 +4704,8 @@
     window.addEventListener("neo-media-state", function (event) {
       var detail = event.detail || {};
       var source = "play:" + String(detail.source || "media");
+      var isPlayingVideo = detail.active !== false && detail.playing === true && detail.kind === "video";
+      if (isPlayingVideo) pauseMusicForVideoFocus();
       var shouldPrioritize = detail.active !== false
         && detail.playing === true
         && (detail.kind === "video" || detail.pauseWallpaper === true);
@@ -4575,6 +4714,7 @@
       if (window.NEOWallpaperEngine && window.NEOWallpaperEngine.setMediaPriority) {
         window.NEOWallpaperEngine.setMediaPriority(mediaPrioritySources.size > 0);
       }
+      if (detail.appId === "stream" && detail.playing === true && mediaPrioritySources.size > 0 && pauseMusicForVideoFocus()) return;
       renderNowPlaying(detail);
     });
     window.addEventListener("neo-media-priority", function (event) {
@@ -4644,7 +4784,7 @@
       if (accountButton) {
         event.preventDefault();
         if (nativeChatSession().id) openApp("chat");
-        else openBrowserPage("sign-in", "NEO Account");
+        else openBrowserPage("sign-in", "Choose a name");
         return;
       }
       var chatSection = event.target.closest("[data-open-chat-section]");
@@ -4829,6 +4969,7 @@
     window.addEventListener("online", updateConnection);
     window.addEventListener("offline", updateConnection);
     window.addEventListener("resize", function () {
+      fitDockToViewport(document.getElementById("neo-dock"));
       if (isSmallScreen()) {
         openWindows.forEach(function (win) { win.classList.remove("is-maximized"); });
       }

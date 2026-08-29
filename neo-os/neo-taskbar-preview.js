@@ -30,6 +30,16 @@
     return icon ? icon.cloneNode(true) : document.createElement("span");
   }
 
+  function fullscreenActive() {
+    var root = document.documentElement;
+    return Boolean(
+      document.fullscreenElement ||
+      document.webkitFullscreenElement ||
+      root.hasAttribute("data-tab-fullscreen") ||
+      root.dataset.fullscreen === "true"
+    );
+  }
+
   function dockButton(id) {
     if (!api || !api.dock) return null;
     return Array.from(api.dock.querySelectorAll(".dock-button[data-app]")).find(function (button) {
@@ -152,8 +162,18 @@
 
   function setWindowMuted(win, muted) {
     if (!win) return;
+    muted = Boolean(muted);
     win.dataset.neoMuted = muted ? "true" : "false";
     win.querySelectorAll("audio, video").forEach(function (media) { media.muted = muted; });
+    var appId = String(win.dataset.appId || "");
+    if (appId === "stream") {
+      if (window.NEO_MUSIC_RUNTIME && typeof window.NEO_MUSIC_RUNTIME.setWindowMuted === "function") {
+        window.NEO_MUSIC_RUNTIME.setWindowMuted(win, muted);
+      }
+      if (window.NEO_FEATURES && typeof window.NEO_FEATURES.setMuted === "function") {
+        window.NEO_FEATURES.setMuted(muted);
+      }
+    }
     win.querySelectorAll("iframe").forEach(function (frame) {
       try {
         frame.contentWindow.postMessage({ type: "neo-shell:set-muted", muted: muted }, window.location.origin);
@@ -225,6 +245,10 @@
 
   function refreshMinimizedTray() {
     if (!minimizedTray || !api) return;
+    if (fullscreenActive()) {
+      minimizedTray.hidden = true;
+      return;
+    }
     minimizedTray.textContent = "";
     var minimized = [];
     api.windows.forEach(function (win, id) {
@@ -291,6 +315,10 @@
 
   function show(button) {
     if (!api || !button || !button.isConnected) return;
+    if (fullscreenActive()) {
+      hideNow();
+      return;
+    }
     var id = button.dataset.app;
     var win = api.windows.get(id);
     if (!win) {
@@ -327,7 +355,7 @@
     var node = document.createElement("section");
     node.className = "neo-taskbar-preview";
     node.hidden = true;
-    node.setAttribute("aria-label", "Window preview");
+    node.setAttribute("aria-label", "Window thumbnail");
     node.innerHTML =
       '<header class="neo-taskbar-preview-titlebar">' +
         '<span><strong data-taskbar-preview-title></strong><small data-taskbar-preview-status></small></span>' +
@@ -351,6 +379,15 @@
       if (win) api.close(win);
     });
     return node;
+  }
+
+  function syncFullscreenVisibility() {
+    if (fullscreenActive()) {
+      hideNow();
+      if (minimizedTray) minimizedTray.hidden = true;
+      return;
+    }
+    refreshMinimizedTray();
   }
 
   function bindDock() {
@@ -394,6 +431,12 @@
     bindDock();
     window.addEventListener("resize", function () { if (anchor) positionPreview(anchor); }, { passive: true });
     window.addEventListener("blur", hideNow);
+    document.addEventListener("fullscreenchange", syncFullscreenVisibility);
+    document.addEventListener("webkitfullscreenchange", syncFullscreenVisibility);
+    new MutationObserver(syncFullscreenVisibility).observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-tab-fullscreen", "data-fullscreen"]
+    });
     document.addEventListener("keydown", function (event) { if (event.key === "Escape" && activeId) hideNow(); });
     document.addEventListener("pointerdown", function (event) {
       if (activeId && !preview.contains(event.target) && !event.target.closest(".dock-button[data-app]")) hideNow();

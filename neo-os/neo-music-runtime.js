@@ -55,6 +55,7 @@
         time: audio.currentTime || 0,
         duration: audio.duration || 0,
         volume: audio.volume,
+        muted: audio.muted,
         shuffle: shuffle,
         loop: audio.loop,
         radio: true,
@@ -70,6 +71,7 @@
       window.dispatchEvent(new CustomEvent("neo-media-state", {
         detail: track ? {
           source: sourceId,
+          appId: "stream",
           active: true,
           playing: playback.playing,
           title: String(track.title || "Music").slice(0, 160),
@@ -271,6 +273,17 @@
       try { broadcast(); } catch (error) {}
     }
 
+    function pause() {
+      wantsPlayback = false;
+      if (audio.paused) {
+        broadcast();
+        return false;
+      }
+      try { audio.pause(); } catch (error) { return false; }
+      broadcast();
+      return true;
+    }
+
     ["play", "pause", "playing", "loadedmetadata", "durationchange", "timeupdate", "volumechange", "ratechange"].forEach(function (name) {
       audio.addEventListener(name, broadcast);
     });
@@ -289,7 +302,7 @@
       try { navigator.mediaSession.setActionHandler("nexttrack", next); } catch (error) {}
       try { navigator.mediaSession.setActionHandler("previoustrack", previous); } catch (error) {}
     }
-    return { audio: audio, broadcast: broadcast, stop: stop };
+    return { audio: audio, broadcast: broadcast, pause: pause, stop: stop };
   }
 
   function createShell(app, body, iconMarkup) {
@@ -414,6 +427,34 @@
     return stopped;
   }
 
+  function pauseWindow(win, id) {
+    if (!win || id !== "stream") return false;
+    var paused = false;
+    win.querySelectorAll(".music-direct-session").forEach(function (session) {
+      var playback = session._neoPlayback;
+      if (!playback || typeof playback.pause !== "function") return;
+      try {
+        paused = playback.pause() || paused;
+      } catch (error) {}
+    });
+    return paused;
+  }
+
+  function setWindowMuted(win, muted) {
+    if (!win) return false;
+    var changed = false;
+    win.querySelectorAll(".music-direct-session").forEach(function (session) {
+      var playback = session._neoPlayback;
+      if (!playback || !playback.audio) return;
+      try {
+        playback.audio.muted = Boolean(muted);
+        if (typeof playback.broadcast === "function") playback.broadcast();
+        changed = true;
+      } catch (error) {}
+    });
+    return changed;
+  }
+
   function restoreWindow(id, openWindows, renderDock, activateWindow) {
     var win = cachedWindows.get(id);
     if (!win) return null;
@@ -441,7 +482,9 @@
   window.NEO_MUSIC_RUNTIME = {
     createShell: createShell,
     mountDirect: mountDirect,
+    pauseWindow: pauseWindow,
     stopWindow: stopWindow,
+    setWindowMuted: setWindowMuted,
     cacheWindow: cacheWindow,
     restoreWindow: restoreWindow,
     getWindow: function (id, openWindows) { return openWindows.get(id) || cachedWindows.get(id) || null; },

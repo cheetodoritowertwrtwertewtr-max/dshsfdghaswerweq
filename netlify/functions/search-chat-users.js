@@ -62,7 +62,7 @@ export async function handler(event) {
     return jsonResponse(405, { code: "method_not_allowed", detail: "Method not allowed" });
   }
   var currentId = accountKey(readBearerUsername(event.headers));
-  if (!currentId) return jsonResponse(401, { code: "login_required", detail: "Please sign in again" });
+  if (!currentId) return jsonResponse(401, { code: "login_required", detail: "Choose your name again" });
   var query = String((event.queryStringParameters && event.queryStringParameters.q) || "").trim().toLowerCase();
   var exact = String((event.queryStringParameters && event.queryStringParameters.exact) || "") === "1";
   if (query.length < 2 || query.length > 32) return jsonResponse(200, { users: [] });
@@ -79,7 +79,7 @@ export async function handler(event) {
       readJson("accounts/" + encodeURIComponent(currentId), {}, controller.signal),
       readJson("accounts", searchParameters, controller.signal)
     ]);
-    if (!values[0]) return jsonResponse(403, { code: "login_required", detail: "Chat account is not linked" });
+    if (!values[0]) return jsonResponse(403, { code: "login_required", detail: "Chat name is not linked" });
     var accounts = values[1] || {};
     var users = Object.entries(accounts).filter(function (entry) {
       var account = entry[1];

@@ -80,9 +80,9 @@
     <link rel="dns-prefetch" href="//web-dashers.github.io" />
     <link rel="prefetch" href="./NEO-BROWSER/index.html" />
     <link rel="prefetch" href="../games/web-dashers.html" />
-    <link rel="stylesheet" href="./neo-os.css?v=20260826-compiler-window-layer-v2" />
+    <link rel="stylesheet" href="./neo-os.css?v=20260828-chat-name-v1" />
     <link rel="stylesheet" href="./neo-taskbar-menu.css?v=20260828-app-spacing-v2" />
-    <link rel="stylesheet" href="./neo-taskbar-preview.css?v=20260828-hover-motion-v2" />
+    <link rel="stylesheet" href="./neo-taskbar-preview.css?v=20260828-fullscreen-hide-v3" />
     <link rel="stylesheet" href="./neo-apps.css?v=20260828-user-discord-v2" />
     <link rel="stylesheet" href="./neo-window-resize.css?v=20260828-controls-hitbox-v2" />
     <link rel="stylesheet" href="./neo-wallpaper-engine.css?v=20260825-white-accents-v1" />
@@ -90,8 +90,9 @@
     <link rel="stylesheet" href="./neo-launcher-glass.css?v=20260820-profile-outline-v2" />
     <link rel="stylesheet" href="./neo-browser-ui.css?v=20260825-home-tabs-v2" />
     <link rel="stylesheet" href="./neo-flat-ui.css?v=20260819-launcher-oled-v1" />
-    <link rel="stylesheet" href="./neo-vertical-taskbar.css?v=20260828-drag-order-v2" />
+    <link rel="stylesheet" href="./neo-vertical-taskbar.css?v=20260828-auto-grow-v2" />
     <link rel="stylesheet" href="./neo-retro-theme.css?v=20260828-launcher-dismiss-v2" />
+    <link rel="stylesheet" href="./neo-topbar-autohide.css?v=20260828-edge-bars-v1" />
     <title>NEO OS</title>
   </head>
   <body>
@@ -258,7 +259,7 @@
         <img src="./assets/neo-logo.svg" width="64" height="64" alt="" />
         <h1 id="neo-login-gate-title">Welcome to NEO OS</h1>
         <div class="neo-login-auth-host" data-neo-login-auth></div>
-        <button class="neo-login-guest" type="button" data-neo-login-guest>Continue as Guest</button>
+        <button class="neo-login-guest" type="button" data-neo-login-guest>Continue without chat</button>
       </div>
     </section>
 
@@ -296,7 +297,7 @@
           <button class="topbar-action" type="button" data-open-chat-section="servers" aria-label="Open chat rooms" title="Rooms">
             <svg class="icon" aria-hidden="true"><use href="#i-users"></use></svg>
           </button>
-          <button class="topbar-account" type="button" data-topbar-account aria-label="Sign in to NEO" title="NEO account"><span data-topbar-account-initial>?</span></button>
+          <button class="topbar-account" type="button" data-topbar-account aria-label="Choose a chat name" title="Choose a name"><span data-topbar-account-initial>?</span></button>
           <span class="connection-state" id="connection-state">
             <span class="connection-dot"></span>
             <span class="connection-label sr-only">Online</span>
@@ -590,24 +591,16 @@
     <template id="neo-account-sign-in-template">
       <section class="neo-browser-sign-in" aria-labelledby="neo-browser-sign-in-title">
         <div class="neo-browser-sign-in-card">
-          <span class="neo-browser-sign-in-icon" aria-hidden="true"><svg class="icon"><use href="#i-lock"></use></svg></span>
-          <p class="neo-browser-sign-in-eyebrow">NEO ACCOUNT</p>
-          <h2 id="neo-browser-sign-in-title">Sign in to Messages</h2>
-          <p class="neo-browser-sign-in-copy" data-neo-auth-copy>Use your NEO username and password to continue.</p>
-          <div class="neo-browser-auth-tabs" role="tablist" aria-label="Account access">
-            <button class="is-active" type="button" role="tab" aria-selected="true" data-neo-auth-mode="login">Sign in</button>
-            <button type="button" role="tab" aria-selected="false" data-neo-auth-mode="register">Register</button>
-          </div>
+          <span class="neo-browser-sign-in-icon" aria-hidden="true"><svg class="icon"><use href="#i-chat"></use></svg></span>
+          <p class="neo-browser-sign-in-eyebrow">GLOBAL CHAT</p>
+          <h2 id="neo-browser-sign-in-title">Choose your name</h2>
+          <p class="neo-browser-sign-in-copy" data-neo-auth-copy>Pick the name people will see in Global Chat.</p>
           <form data-neo-sign-in-form novalidate>
             <label>
-              <span>Username</span>
-              <input type="text" name="username" autocomplete="username" maxlength="32" required />
+              <span>Display name</span>
+              <input type="text" name="username" autocomplete="nickname" minlength="3" maxlength="24" placeholder="Your name" required />
             </label>
-            <label>
-              <span>Password</span>
-              <input type="password" name="password" autocomplete="current-password" maxlength="256" required />
-            </label>
-            <button type="submit" data-neo-sign-in-submit>Sign in</button>
+            <button type="submit" data-neo-sign-in-submit>Continue</button>
             <p class="neo-browser-sign-in-feedback" data-neo-sign-in-feedback role="status" aria-live="polite"></p>
           </form>
         </div>
@@ -648,9 +641,9 @@
           </div>
           <footer class="messages-connection">
             <span class="messages-connection-dot" data-chat-connection-dot aria-hidden="true"></span>
-            <span class="messages-connection-copy"><span data-chat-connection>Checking account...</span><small data-chat-account>Offline</small></span>
+            <span class="messages-connection-copy"><span data-chat-connection>Checking name...</span><small data-chat-account>Offline</small></span>
             <span class="messages-connection-actions">
-              <button class="messages-sign-in" data-chat-sign-in type="button" aria-label="Sign in to NEO Messages">Sign in</button>
+              <button class="messages-sign-in" data-chat-sign-in type="button" aria-label="Choose a chat name">Choose name</button>
             </span>
           </footer>
         </aside>
@@ -749,7 +742,7 @@
                     <option value="video">Video</option>
                     <option value="web">Web</option>
                     <option value="application" data-online-only>Application</option>
-                    <option value="preview" data-installed-only>Preview</option>
+                    <option value="preview" data-installed-only>Standard</option>
                     <option value="image" data-installed-only>Image</option>
                   </select>
                 </label>
@@ -1041,7 +1034,7 @@
             <span><strong>Wallpaper Engine</strong><small>Choose, import, and control desktop wallpaper</small></span>
             <svg class="icon" aria-hidden="true"><use href="#i-chevron"></use></svg>
           </button>
-          <div class="section-heading"><div><h3>Taskbar appearance</h3><p>Preview the desktop material live.</p></div></div>
+          <div class="section-heading"><div><h3>Taskbar appearance</h3><p>Adjust the desktop material live.</p></div></div>
           <div class="material-picker" role="group" aria-label="Taskbar material">
             <button type="button" data-taskbar-material="clear" aria-pressed="true"><span class="material-swatch material-clear"></span>Clear</button>
             <button type="button" data-taskbar-material="transparent" aria-pressed="false"><span class="material-swatch material-transparent"></span>Transparent</button>
@@ -1091,7 +1084,7 @@
           <div>
             <span class="eyebrow">HTML GAME LIBRARY</span>
             <h2>Choose a game</h2>
-            <p>HTML games open from this device with no separate sign-in.</p>
+            <p>HTML games open from this device without another account.</p>
           </div>
           <span class="status-pill" data-library-count aria-live="polite">Loading</span>
         </header>
@@ -1119,19 +1112,20 @@
         <p class="calendar-weekday" data-calendar-weekday>Monday</p>
         <p class="calendar-date" data-calendar-date>August 2</p>
         <p class="calendar-time" data-calendar-time>12:00 PM</p>
-        <div class="calendar-note"><span></span><p><strong>NEO OS prototype</strong><small>Local workspace, no deployment scheduled.</small></p></div>
+        <div class="calendar-note"><span></span><p><strong>NEO OS workspace</strong><small>Your local calendar and activity.</small></p></div>
       </div>
     </template>
 
     <script src="./neo-frame-loader.js?v=20260826-compiler-html-v1" defer></script>
     <script src="./neo-apps.js?v=20260828-youtube-app-v2" defer></script>
-    <script src="./neo-music-runtime.js?v=20260828-close-stop-v3" defer></script>
+    <script src="./neo-music-runtime.js?v=20260828-media-focus-v2" defer></script>
     <script src="./neo-wallpaper-engine.js?v=20260827-exact-wallpaper-v1" defer></script>
     <script src="./neo-wallpaper-quality.js?v=20260804-quality-v7" defer></script>
-    <script src="./neo-taskbar-preview.js?v=20260827-minimized-tray-v1" defer></script>
-    <script src="./neo-os.js?v=20260828-window-controls-v4" defer></script>
+    <script src="./neo-taskbar-preview.js?v=20260828-minimized-mute-v2" defer></script>
+    <script src="./neo-os.js?v=20260828-youtube-media-focus-v4" defer></script>
     <script src="./neo-window-resize.js?v=20260828-controls-hitbox-v1" defer></script>
     <script src="./neo-taskbar-menu.js?v=20260805-desktop-menu-v3" defer></script>
     <script src="./neo-rainmeter.js?v=20260825-default-center-v1" defer></script>
+    <script src="./neo-topbar-autohide.js?v=20260828-edge-bars-v1" defer></script>
   </body>
 </html>
