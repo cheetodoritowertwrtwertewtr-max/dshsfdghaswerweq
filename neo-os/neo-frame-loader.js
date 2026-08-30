@@ -131,16 +131,19 @@
     var popup = window.open("about:blank", "_blank");
     if (!popup) return Promise.reject(new Error("Pop-ups are blocked."));
     popup.document.open();
-    popup.document.write("<!doctype html><title>Opening...</title><style>html,body{height:100%;margin:0;background:#000;color:#fff;font:14px system-ui;display:grid;place-items:center}</style><p>Opening...</p>");
+    popup.document.write("<!doctype html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>Opening...</title><style>html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#000}iframe{position:fixed;inset:0;width:100%;height:100%;border:0;background:#000}</style></head><body></body></html>");
     popup.document.close();
-    return fetchDocument(sourceUrl, { cache: "force-cache" }).then(function (result) {
-      popup.document.open();
-      popup.document.write(prepareDocument(result.html, sourceUrl));
-      popup.document.close();
+    var frame = popup.document.createElement("iframe");
+    frame.title = "NEO OS app";
+    frame.allow = "autoplay; clipboard-read; clipboard-write; fullscreen; gamepad";
+    frame.allowFullscreen = true;
+    popup.document.body.appendChild(frame);
+    return load(frame, sourceUrl, { cache: "force-cache" }).then(function () {
+      popup.document.title = frame.title;
       popup.focus();
     }).catch(function (error) {
       try {
-        popup.document.body.textContent = "This app could not be opened. Please try again.";
+        popup.document.body.innerHTML = '<main style="min-height:100%;display:grid;place-items:center;color:#fff;font:14px system-ui"><p>This app could not be opened. Please try again.</p></main>';
       } catch (_error) {}
       throw error;
     });
