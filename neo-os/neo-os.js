@@ -4635,7 +4635,7 @@
       var token = localStorage.getItem("ugp_token") || "";
       var user = JSON.parse(localStorage.getItem("ugp_session") || "null");
       hasSession = Boolean(token && user && user.username);
-      if (!hasSession && sessionStorage.getItem(GUEST_SESSION_KEY) === "1") return;
+      if (!hasSession && localStorage.getItem(GUEST_SESSION_KEY) === "1") return;
     } catch (error) {}
     if (hasSession) return;
 
@@ -4657,7 +4657,7 @@
     updateGateTime();
     gate._neoClockTimer = window.setInterval(updateGateTime, 1000);
     guest.addEventListener("click", function () {
-      try { sessionStorage.setItem(GUEST_SESSION_KEY, "1"); } catch (error) {}
+      try { localStorage.setItem(GUEST_SESSION_KEY, "1"); } catch (error) {}
       dismissGate();
       showToast("Chat skipped", "Choose a name later from the account button.", "check");
     }, { once: true });
@@ -4665,7 +4665,7 @@
     import("./neo-account-signin.js?v=5").then(function (runtime) {
       if (gate.hidden) return;
       gate._neoAuthCleanup = runtime.mountAccountSignIn(mount, function () {}, function (payload) {
-        try { sessionStorage.removeItem(GUEST_SESSION_KEY); } catch (error) {}
+        try { localStorage.removeItem(GUEST_SESSION_KEY); } catch (error) {}
         window.dispatchEvent(new CustomEvent("neo-auth-changed", { detail: { user: payload.user } }));
         dismissGate();
         showToast("Chat ready", "You are now " + payload.user.username + ".", "check");

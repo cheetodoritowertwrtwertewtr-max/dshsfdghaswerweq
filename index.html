@@ -25,8 +25,10 @@
     (() => {
       "use strict";
 
-      // NEO must run from a real HTTPS origin so ChromeOS can start its worker.
-      const hostedApp = "https://unblockedgames99x-code.github.io/dshsfdghaswerweq/neo-os/";
+      // NEO uses the local copy while developing and its HTTPS origin when published.
+      const productionApp = "https://unblockedgames99x-code.github.io/dshsfdghaswerweq/neo-os/";
+      const isLocal = location.protocol === "http:" && /^(?:localhost|127\.0\.0\.1)$/.test(location.hostname);
+      const hostedApp = isLocal ? new URL("./neo-os/", location.href).href : productionApp;
       const blankButton = document.getElementById("blank");
       const fullButton = document.getElementById("full");
       const status = document.getElementById("status");
@@ -38,6 +40,7 @@
         frame.allow = "autoplay; clipboard-read; clipboard-write; fullscreen; gamepad";
         frame.allowFullscreen = true;
         frame.referrerPolicy = "strict-origin-when-cross-origin";
+        frame.style.cssText = "position:fixed;inset:0;width:100%;height:100%;border:0;background:#000";
         return frame;
       }
 
@@ -54,9 +57,10 @@
           return;
         }
         popup.document.open();
-        popup.document.write("<!doctype html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>NEO OS</title><style>html,body{height:100%;margin:0;overflow:hidden;background:#000}iframe{width:100%;height:100%;border:0}</style></head><body></body></html>");
+        popup.document.write("<!doctype html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>NEO OS</title><style>html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#000}</style></head><body></body></html>");
         popup.document.close();
-        popup.document.body.appendChild(createFrame(popup.document, hostedApp));
+        const frame = createFrame(popup.document, hostedApp);
+        popup.document.body.replaceChildren(frame);
         popup.focus();
         const requestFullscreen = popup.document.documentElement.requestFullscreen;
         if (requestFullscreen) {
